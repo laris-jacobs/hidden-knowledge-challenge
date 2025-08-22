@@ -11,7 +11,7 @@ This is a **mono-repo** containing both backend and frontend.
 
 - **Frontend**: Angular
 - **Backend**: Python with Flask
-- **Database**: PostgreSQL (graph-like schema using recursive queries)
+- **Database**: PostgreSQL (local) und T-SQL (prod) - graph-like schema using recursive queries
 
 ## Getting Started
 
@@ -21,7 +21,7 @@ This is a **mono-repo** containing both backend and frontend.
 - Node.js + npm (for running the Angular frontend locally)
 - Python 3.10+ (for running the Flask backend locally)
 
-### Run the database
+### Run the database locally
 
 Start the database by running:
 
