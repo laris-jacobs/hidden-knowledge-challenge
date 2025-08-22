@@ -21,14 +21,14 @@ def index():
 def runshell(cmd):
     output = ""
     log(f"run: {cmd}")
-    cupsresult = subprocess.run(
+    procresult = subprocess.run(
         cmd,
         shell=True,
         text=True,
         capture_output=True,
     )
-    output += f"<br>stdout: {cupsresult.stdout}\n"
-    output += f"<br>stderr: {cupsresult.stderr}\n"
+    output += f"<br>stdout: {procresult.stdout}\n"
+    output += f"<br>stderr: {procresult.stderr}\n"
     return output
 
 
