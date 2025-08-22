@@ -18,28 +18,17 @@ def index():
     data = {"somearray": ["aaa", "bbb"]}
     return jsonify(data)
 
-def sql_all(query):
-    with get_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute(query)
-        columns = [desc[0] for desc in cursor.description]
-        data = cursor.fetchall()
-        return [dict(zip(columns, row)) for row in data]
-
 @app.route('/item')
 def item_all():
-    log("index...")
-    rows = sql_all("SELECT id, name, image_url, is_base, base_harvest FROM item")
-    return jsonify(rows)
+    return jsonify( sql_all("SELECT * FROM item"))
+@app.route('/action')
+def action_all():
+    log("todo: actions brauchen list über die foreignkeys")
+    return jsonify( sql_all("SELECT * FROM action"))
 
 
 def get_connection():
-    log("drivers: " )
-    for d in pyodbc.drivers():
-        log("d: " +d )
-    log("drivers-end " )
     odbc_string = """Driver={ODBC Driver 18 for SQL Server};Server=tcp:bernhaeckt-sql.database.windows.net,1433;Database=Bernhaeckt;Uid=bernhaeckt;Pwd=Unisysch2025;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;"""
-
     try:
         connection = pyodbc.connect(odbc_string)
         return connection
@@ -51,7 +40,19 @@ def sql_one(query):
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(query)
-        return cursor.fetchone()
+        columns = [desc[0] for desc in cursor.description]
+        data = cursor.fetchall()
+        return [dict(zip(columns, row)) for row in data]
+
+
+def sql_all(query):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(query)
+        columns = [desc[0] for desc in cursor.description]
+        data = cursor.fetchall()
+        return [dict(zip(columns, row)) for row in data]
+
 def runshell(cmd):
     output = ""
     log(f"run: {cmd}")
@@ -70,10 +71,13 @@ def runshell(cmd):
 def serverstart():
     log("serverstart...")
     log("testrunshell: " + runshell("ls -la"))
+    log("drivers: " )
+    for d in pyodbc.drivers():
+        log("d: " +d )
+    log("drivers-end " )
     log("select 1 result: " + str( sql_one("select 1")))
     log("select schemas result: " + str(sql_one("select schema_name from information_schema.schemata")))
     log("select 1 result: " + str( sql_one("select * from item")))
-
 
 serverstart()
 if __name__ == '__main__':
