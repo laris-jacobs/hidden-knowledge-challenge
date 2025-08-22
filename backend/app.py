@@ -16,6 +16,20 @@ def index():
     data = {"somearray": ["aaa", "bbb"]}
     return jsonify(data)
 
+def sql_all(query):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(query)
+        data = cursor.fetchall()
+        return data
+
+@app.route('/item')
+def item_all():
+    log("index...")
+    rows = sql_all("SELECT id, name, image_url, is_base, base_harvest FROM item")
+    data = [{"id":r.id, "name":r.name, "image_url": r.image_url, "is_base":r.is_base, "base_harvest": r.base_harvest} for r in rows]
+    return jsonify(data)
+
 
 def get_connection():
     log("drivers: " )
@@ -36,7 +50,6 @@ def sql_one(query):
         cursor = conn.cursor()
         cursor.execute(query)
         return cursor.fetchone()
-
 def runshell(cmd):
     output = ""
     log(f"run: {cmd}")
