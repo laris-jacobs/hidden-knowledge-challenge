@@ -15,8 +15,9 @@ RUN pip3 install --break-system-packages uv
 WORKDIR /backend
 COPY installodbc.sh .
 RUN chmod +x installodbc.sh && ./installodbc.sh
-COPY . /backend
+COPY pyproject.toml /backend
 RUN uv sync
+COPY . /backend
 # Expose port
 EXPOSE 8080
 

@@ -1,5 +1,7 @@
 import datetime
 import subprocess
+from typing import Dict, List
+
 from dotenv import load_dotenv
 from flask import Flask, jsonify
 import pyodbc
@@ -20,15 +22,15 @@ def sql_all(query):
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(query)
+        columns = [desc[0] for desc in cursor.description]
         data = cursor.fetchall()
-        return data
+        return [dict(zip(columns, row)) for row in data]
 
 @app.route('/item')
 def item_all():
     log("index...")
     rows = sql_all("SELECT id, name, image_url, is_base, base_harvest FROM item")
-    data = [{"id":r.id, "name":r.name, "image_url": r.image_url, "is_base":r.is_base, "base_harvest": r.base_harvest} for r in rows]
-    return jsonify(data)
+    return jsonify(rows)
 
 
 def get_connection():
