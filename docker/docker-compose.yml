@@ -1,0 +1,22 @@
+# docker-compose.yml
+version: "3.9"
+services:
+  db:
+    image: postgres:16
+    container_name: mc-pg
+    environment:
+      POSTGRES_USER: mc
+      POSTGRES_PASSWORD: minecraft123
+      POSTGRES_DB: mcdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+  adminer:
+    image: adminer
+    container_name: mc-adminer
+    restart: always
+    ports:
+      - "8080:8080"
+volumes:
+  pg-data:
