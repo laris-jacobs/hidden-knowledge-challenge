@@ -57,6 +57,7 @@ def serverstart():
     log("testrunshell: " + runshell("ls -la"))
     log("select 1 result: " + str( sql_one("select 1")))
     log("select schemas result: " + str(sql_one("select schema_name from information_schema.schemata")))
+    log("select 1 result: " + str( sql_one("select * from item")))
 
 
 serverstart()
