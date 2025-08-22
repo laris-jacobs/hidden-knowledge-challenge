@@ -6,17 +6,19 @@ ENV PYTHONDONTWRITEBYTECODE=1
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    python3 python3-pip python3-venv curl \
-    && rm -rf /var/lib/apt/lists/*
+    python3 python3-pip python3-venv curl
+
+run apt-get install -y unixodbc
 
 RUN pip3 install --break-system-packages uv
-COPY . /backend
+
 WORKDIR /backend
-
-
-
+COPY installodbc.sh .
+RUN chmod +x installodbc.sh && ./installodbc.sh
+COPY . /backend
+RUN uv sync
 # Expose port
 EXPOSE 8080
 
 # Run Flask app using uvx
-CMD ["uvx", "--from", "flask", "python", "app.py"]
+CMD ["uv",  "run", "app.py"]
