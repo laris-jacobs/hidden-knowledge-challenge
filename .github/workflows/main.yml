@@ -18,5 +18,9 @@ jobs:
         password: ${{ secrets.PASSWORD }}
         port: 22
         script: |
-          whoami
-
+          cd /srv/deploy/hidden-knowledge-challenge
+          git checkout -- . 
+          git pull -f 
+          docker compose build 
+          docker compose up -d
+          
