@@ -36,7 +36,7 @@ def get_actions():
     raw_actions = sql_all("SELECT * FROM action")
     raw_inputs = sql_all("SELECT * FROM action_input")
     raw_outputs = sql_all("SELECT * FROM action_output")
-    raw_sources = sql_all("SELECT * FROM soure")
+    raw_sources = sql_all("SELECT * FROM source")
     log("raw_inputs " + str(raw_inputs))
     log("raw_outputs " + str(raw_outputs))
     result = []
