@@ -21,8 +21,32 @@ def item_all():
     return jsonify( sql_all("SELECT * FROM item"))
 @app.route('/action')
 def action_all():
-    log("todo: actions brauchen list über die foreignkeys")
-    return jsonify( sql_all("SELECT * FROM action"))
+    log("action_all...")
+    return jsonify( get_actions())
+
+def find_by_id(_list,  _id):
+    results = []
+    for item in _list:
+        if item["action_id"] == _id:
+            results.append(item)
+    return results
+
+
+def get_actions():
+    raw_actions = sql_all("SELECT * FROM action")
+    raw_inputs = sql_all("SELECT * FROM action_input")
+    raw_outputs = sql_all("SELECT * FROM action_output")
+    log("raw_inputs " + str(raw_inputs))
+    log("raw_outputs " + str(raw_outputs))
+    result = []
+    for a in raw_actions:
+        relevant_inputs =  find_by_id(raw_inputs, a["id"])
+        relevant_outputs =  find_by_id(raw_outputs, a["id"])
+        a["inputs"] = relevant_inputs
+        a["outputs"] = relevant_outputs
+        result.append(a)
+    log("result " + str(result))
+    return  result
 
 
 def get_connection():
@@ -73,9 +97,7 @@ def serverstart():
     for d in pyodbc.drivers():
         log("d: " +d )
     log("drivers-end " )
-    log("select 1 result: " + str( sql_one("select 1")))
-    log("select schemas result: " + str(sql_one("select schema_name from information_schema.schemata")))
-    log("select 1 result: " + str( sql_one("select * from item")))
+    log("select action: " + str( get_actions()))
 
 serverstart()
 if __name__ == '__main__':
