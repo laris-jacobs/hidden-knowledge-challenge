@@ -1,5 +1,7 @@
 body{
-  background-image: url("../../../public/header-background.jpg");
+  background:
+    linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)),
+    url("../../../public/header-background.jpg");
 }
 .container{
   display: block;
