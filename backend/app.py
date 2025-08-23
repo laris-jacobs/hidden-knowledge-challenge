@@ -2,6 +2,7 @@ import datetime
 import subprocess
 from typing import Dict, List
 from flask import Flask, jsonify
+from flask_cors import CORS
 import pyodbc
 app = Flask(__name__)
 
@@ -117,5 +118,7 @@ def serverstart():
     log("select action: " + str( get_actions()))
 
 serverstart()
+
+CORS(app)
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
