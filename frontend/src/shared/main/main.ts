@@ -18,9 +18,8 @@ export class Main implements OnInit{
   // Beispiel: nur 3 Optionen + 3 Checkboxen
   options: ControlOption[] = [
     { key: 'crafting_table', label: 'Crafting table', imgSrc: '/imgs/achievements/crafting_table.png' },
-    { key: 'stone_pickaxe', label: 'Stone pickaxe', imgSrc: '/imgs/achievements/stone_pickaxe.png' },
+    { key: 'pickaxe_stone', label: 'Stone pickaxe', imgSrc: '/imgs/achievements/stone_pickaxe.png' },
     { key: 'iron_sword', label: 'Iron sword', imgSrc: '/imgs/achievements/iron_sword.png' },
-    { key: 'diamond_sword', label: 'diamond_sword', imgSrc: '/imgs/achievements/diamond_sword.png' },
   ];
   ngOnInit(): void {
 

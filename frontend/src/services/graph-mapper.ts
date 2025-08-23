@@ -9,40 +9,17 @@ const DEF_OPTS: Required<GraphBuildOptions> = {
   baseX: 120, colGap: 160, rowGap: 90,
   itemSize: { w: 72,  h: 72 },
   actionSize: { w: 108, h: 108 },
-  // werden in dieser Basis-Variante nicht benötigt, bleiben aber für Kompatibilität
   unknownItemImg: '',
   defaultItemImg: IMG_ITEM_DEFAULT,
   defaultActionImg: IMG_ACTION_DEFAULT,
 };
 
 export function buildKnowledgeGraphStatic(
-  actions: Action[],
+  actionsInput: Action[],
   targetItemId: string,
   opts: GraphBuildOptions = {}
 ): GraphResult {
   const O = { ...DEF_OPTS, ...opts };
-
-  // --- Indizes & Caches ---
-  const actionsByOutput = new Map<string, Action[]>(); // itemId -> Actions, die dieses Item ausgeben
-  const itemCache = new Map<string, Item>();           // bekannte Items aus inputs/outputs
-  const nodes = new Map<string, MiniNode>();
-  const edges: MiniEdge[] = [];
-  const levelByNode = new Map<string, number>();       // Spalten-Index (kleiner = weiter links)
-  const nextRowIndex = new Map<number, number>();      // Level -> nächste freie Zeile
-
-  // Indexieren
-  for (const act of actions) {
-    for (const out of act.outputs ?? []) {
-      const iid = out.item?.id; if (!iid) continue;
-      const list = actionsByOutput.get(iid) ?? [];
-      list.push(act);
-      actionsByOutput.set(iid, list);
-      if (out.item) itemCache.set(out.item.id!, out.item);
-    }
-    for (const inp of act.inputs ?? []) {
-      if (inp.item?.id) itemCache.set(inp.item.id, inp.item);
-    }
-  }
 
   // ---------- Utils ----------
   const parseTrust = (t?: string) => {
@@ -50,7 +27,7 @@ export function buildKnowledgeGraphStatic(
     return Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : 0.5;
   };
 
-  const bestSource = (sources?: Source[]) => {
+  const bestSourceMeta = (sources?: Source[]) => {
     if (!sources?.length) return { trust: 0.5, sourceName: 'Unknown' };
     let best = sources[0], bestT = parseTrust(best.trust);
     for (const s of sources) {
@@ -68,7 +45,7 @@ export function buildKnowledgeGraphStatic(
       const s = v.toLowerCase();
       return s === 'true' || s === '1' || s === 'yes';
     }
-    return it.base_harvest != null; // Base, wenn sammelbar
+    return it.base_harvest != null;
   };
 
   const addEdge = (sourceId: string, targetId: string, qty: number) => {
@@ -77,6 +54,92 @@ export function buildKnowledgeGraphStatic(
     }
   };
 
+  const normalizeIO = (list?: { item?: Item; qty?: number }[]) =>
+    (list ?? [])
+      .map(x => ({ id: x.item?.id ?? '', qty: x.qty ?? 1, name: x.item?.name, image_url: x.item?.image_url }))
+      .filter(x => !!x.id)
+      .sort((a, b) => a.id.localeCompare(b.id))
+      .map(x => `${x.id}#${x.qty}`)
+      .join('|');
+
+  const signatureForAction = (act: Action) => {
+    const inKey  = normalizeIO(act.inputs as any);
+    const outKey = normalizeIO(act.outputs as any);
+    return `IN:${inKey}||OUT:${outKey}`;
+  };
+
+  const dedupeSources = (arr: Source[] = []) => {
+    const map = new Map<string, Source>();
+    for (const s of arr) {
+      const k = s.id ?? `${s.name}-${s.trust}`;
+      // falls gleiche id mehrfach: behalte die mit höherem trust
+      const prev = map.get(k);
+      if (!prev || parseTrust(s.trust) > parseTrust(prev.trust)) map.set(k, s);
+    }
+    return Array.from(map.values());
+  };
+
+  // ---------- Merge-Phase: gleiche IO-Signatur -> eine Action ----------
+  const groups = new Map<string, Action[]>();
+  for (const act of actionsInput) {
+    const key = signatureForAction(act);
+    const list = groups.get(key) ?? [];
+    list.push(act);
+    groups.set(key, list);
+  }
+
+  const mergedActions: Action[] = [];
+  for (const [key, acts] of groups) {
+    if (acts.length === 1) {
+      mergedActions.push(acts[0]);
+      continue;
+    }
+    // Beste Action nach Trust (für image_url etc.)
+    let best = acts[0];
+    let bestT = bestSourceMeta(best.sources).trust;
+    for (const a of acts.slice(1)) {
+      const t = bestSourceMeta(a.sources).trust;
+      if (t > bestT) { best = a; bestT = t; }
+    }
+    const combinedSources = dedupeSources(acts.flatMap(a => a.sources ?? []));
+    const sample = acts[0];
+
+    const merged: Action = {
+      id: sample.id ?? `act_merged_${Math.random().toString(36).slice(2)}`,
+      action_type_id: sample.action_type_id ?? 'merged',
+      image_url: best.image_url && best.image_url.trim() ? best.image_url : (sample.image_url ?? ''),
+      inputs: sample.inputs ? JSON.parse(JSON.stringify(sample.inputs)) : [],
+      outputs: sample.outputs ? JSON.parse(JSON.stringify(sample.outputs)) : [],
+      sources: combinedSources,
+      station: sample.station ?? ''
+    };
+    mergedActions.push(merged);
+  }
+
+  // --- Indizes & Caches ---
+  const actionsByOutput = new Map<string, Action[]>(); // itemId -> (gemergte) Actions, die dieses Item ausgeben
+  const itemCache = new Map<string, Item>();           // bekannte Items aus inputs/outputs
+  const nodes = new Map<string, MiniNode>();
+  const edges: MiniEdge[] = [];
+  const levelByNode = new Map<string, number>();
+  const nextRowIndex = new Map<number, number>();
+
+  // Indexieren auf Basis der GEMERGTEN Actions
+  for (const act of mergedActions) {
+    for (const out of act.outputs ?? []) {
+      const iid = out.item?.id; if (!iid) continue;
+      const list = actionsByOutput.get(iid) ?? [];
+      // verhindere doppelte Einträge derselben gemergten Action (falls mehrfach identischer Output)
+      if (!list.includes(act)) list.push(act);
+      actionsByOutput.set(iid, list);
+      if (out.item) itemCache.set(out.item.id!, out.item);
+    }
+    for (const inp of act.inputs ?? []) {
+      if (inp.item?.id) itemCache.set(inp.item.id, inp.item);
+    }
+  }
+
+  // ---------- Node/Edge-Helpers ----------
   const ensureItemNode = (itemId: string, level: number, label?: string): MiniNode => {
     const ex = nodes.get(itemId);
     const it = itemCache.get(itemId);
@@ -95,7 +158,7 @@ export function buildKnowledgeGraphStatic(
       id: itemId,
       label: name,
       kind: 'item',
-      trust: 0.95,                 // neutral für Items
+      trust: 0.95,
       sourceName: 'Aggregated',
       img,
       x: 0, y: 0, w: O.itemSize.w, h: O.itemSize.h,
@@ -110,9 +173,11 @@ export function buildKnowledgeGraphStatic(
     (act.inputs ?? []).map(i => `${i.qty ?? 1} ${i.item?.name ?? i.item?.id ?? 'Unknown'}`).join(' + ')
     || (act.station ?? act.action_type_id ?? 'Action');
 
-  const ensureActionNode = (act: Action, level: number, trust: number, sourceName: string): MiniNode => {
+  const ensureActionNode = (act: Action, level: number): MiniNode => {
     const id = act.id ?? `act_${Math.random().toString(36).slice(2)}`;
     const ex = nodes.get(id);
+    const { trust, sourceName } = bestSourceMeta(act.sources);
+
     if (ex) {
       const prev = levelByNode.get(id) ?? level;
       if (level < prev) levelByNode.set(id, level);
@@ -133,63 +198,50 @@ export function buildKnowledgeGraphStatic(
     return node;
   };
 
-  // ---------- Rekursion (immer weiter nach links) ----------
+  // ---------- Rekursion (rechts -> links) ----------
   // Konvention:
-  // - Item auf Level L
-  // - Action, die dieses Item produziert, auf Level L-1
-  // - Deren Input-Items auf Level L-2
-  // => Ziel-Item startet bei Level 0 (rechts), Inputs zunehmend negativ (links)
-  const visited = new Set<string>(); // optionaler Schutz gegen Zyklen (pro Item)
+  //   Item auf Level L
+  //   Producer-Action auf Level L-1
+  //   Deren Input-Items auf Level L-2
+  const visited = new Set<string>();
 
   const expandForItem = (itemId: string, level: number) => {
-    // Item anlegen (auf Level L)
     ensureItemNode(itemId, level);
-
-    // Zyklen vermeiden (bei exotischen Daten)
     const visitKey = `${itemId}@${level}`;
     if (visited.has(visitKey)) return;
     visited.add(visitKey);
 
-    // Alle Producer-Actions (falls keine: Base-Items terminieren hier sowieso)
     const producers = actionsByOutput.get(itemId) ?? [];
     for (const act of producers) {
-      const { trust, sourceName } = bestSource(act.sources);
       const actionLevel = level - 1;
-      const actionNode = ensureActionNode(act, actionLevel, trust, sourceName);
+      const actionNode = ensureActionNode(act, actionLevel);
 
-      // Action → dieses Output-Item (nur die passende Output-Menge)
+      // Action -> dieses Output-Item (nur passende Menge)
       const out = (act.outputs ?? []).find(o => o.item?.id === itemId);
       addEdge(actionNode.id, itemId, out?.qty ?? 1);
 
-      // Inputs: Item → Action und rekursiv weiter nach links
+      // Inputs: Item -> Action und rekursiv weiter
       for (const inp of (act.inputs ?? [])) {
         const inItem = inp.item; if (!inItem?.id) continue;
-
-        // Input-Item liegt zwei Spalten links vom Output-Item
         const inputLevel = level - 2;
         ensureItemNode(inItem.id, inputLevel);
         addEdge(inItem.id, actionNode.id, inp.qty ?? 1);
 
-        // Rekursion nur, wenn kein Base-Item
         if (!isBase(inItem)) {
           expandForItem(inItem.id, inputLevel);
-        } else {
-          // Base-Items werden angelegt, aber nicht weiter expandiert
-          ensureItemNode(inItem.id, inputLevel);
         }
       }
     }
   };
 
-  // Start: Ziel-Item auf Level 0 (rechts)
+  // Start: Ziel-Item rechts (Level 0)
   expandForItem(targetItemId, 0);
 
   // ---------- Layout ----------
-  // Levels normalisieren: kleinster Level -> 0
   const allLevels = Array.from(levelByNode.values());
   const minLevel = Math.min(...allLevels);
   for (const n of nodes.values()) {
-    const lvl = (levelByNode.get(n.id)! - minLevel); // >= 0
+    const lvl = (levelByNode.get(n.id)! - minLevel);
     const x = O.baseX + lvl * O.colGap;
     const row = nextRowIndex.get(lvl) ?? 0;
     const y = 120 + row * O.rowGap;
