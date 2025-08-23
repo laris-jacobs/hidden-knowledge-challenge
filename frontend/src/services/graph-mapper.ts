@@ -4,12 +4,11 @@ import { GraphResult, MiniNode, MiniEdge, GraphBuildOptions } from '../models/gr
 const IMG_ITEM_DEFAULT   = 'imgs/items/placeholder.png';
 const IMG_ACTION_DEFAULT = 'imgs/recipes/placeholder.png';
 
-// Defaults fürs Layout
 const DEF_OPTS: Required<GraphBuildOptions> = {
   baseX: 120, colGap: 160, rowGap: 90,
   itemSize: { w: 72,  h: 72 },
   actionSize: { w: 108, h: 108 },
-  unknownItemImg: '',
+  unknownItemImg: '',                       // unknown: kein Bild
   defaultItemImg: IMG_ITEM_DEFAULT,
   defaultActionImg: IMG_ACTION_DEFAULT,
 };
@@ -48,15 +47,10 @@ export function buildKnowledgeGraphStatic(
     return it.base_harvest != null;
   };
 
-  const addEdge = (sourceId: string, targetId: string, qty: number) => {
-    if (!edges.some(e => e.source === sourceId && e.target === targetId && e.qty === qty)) {
-      edges.push({ source: sourceId, target: targetId, qty });
-    }
-  };
-
+  // Für IO-Signaturen (Merge)
   const normalizeIO = (list?: { item?: Item; qty?: number }[]) =>
     (list ?? [])
-      .map(x => ({ id: x.item?.id ?? '', qty: x.qty ?? 1, name: x.item?.name, image_url: x.item?.image_url }))
+      .map(x => ({ id: x.item?.id ?? '', qty: x.qty ?? 1 }))
       .filter(x => !!x.id)
       .sort((a, b) => a.id.localeCompare(b.id))
       .map(x => `${x.id}#${x.qty}`)
@@ -72,14 +66,13 @@ export function buildKnowledgeGraphStatic(
     const map = new Map<string, Source>();
     for (const s of arr) {
       const k = s.id ?? `${s.name}-${s.trust}`;
-      // falls gleiche id mehrfach: behalte die mit höherem trust
       const prev = map.get(k);
       if (!prev || parseTrust(s.trust) > parseTrust(prev.trust)) map.set(k, s);
     }
     return Array.from(map.values());
   };
 
-  // ---------- Merge-Phase: gleiche IO-Signatur -> eine Action ----------
+  // ---------- Merge-Phase ----------
   const groups = new Map<string, Action[]>();
   for (const act of actionsInput) {
     const key = signatureForAction(act);
@@ -89,21 +82,15 @@ export function buildKnowledgeGraphStatic(
   }
 
   const mergedActions: Action[] = [];
-  for (const [key, acts] of groups) {
-    if (acts.length === 1) {
-      mergedActions.push(acts[0]);
-      continue;
-    }
-    // Beste Action nach Trust (für image_url etc.)
-    let best = acts[0];
-    let bestT = bestSourceMeta(best.sources).trust;
+  for (const acts of groups.values()) {
+    if (acts.length === 1) { mergedActions.push(acts[0]); continue; }
+    let best = acts[0], bestT = bestSourceMeta(best.sources).trust;
     for (const a of acts.slice(1)) {
       const t = bestSourceMeta(a.sources).trust;
       if (t > bestT) { best = a; bestT = t; }
     }
     const combinedSources = dedupeSources(acts.flatMap(a => a.sources ?? []));
     const sample = acts[0];
-
     const merged: Action = {
       id: sample.id ?? `act_merged_${Math.random().toString(36).slice(2)}`,
       action_type_id: sample.action_type_id ?? 'merged',
@@ -111,25 +98,23 @@ export function buildKnowledgeGraphStatic(
       inputs: sample.inputs ? JSON.parse(JSON.stringify(sample.inputs)) : [],
       outputs: sample.outputs ? JSON.parse(JSON.stringify(sample.outputs)) : [],
       sources: combinedSources,
-      station: sample.station ?? ''
+      station: sample.station ?? '',
     };
     mergedActions.push(merged);
   }
 
   // --- Indizes & Caches ---
-  const actionsByOutput = new Map<string, Action[]>(); // itemId -> (gemergte) Actions, die dieses Item ausgeben
-  const itemCache = new Map<string, Item>();           // bekannte Items aus inputs/outputs
+  const actionsByOutput = new Map<string, Action[]>(); // itemId -> gemergte Actions, die dieses Item ausgeben
+  const itemCache = new Map<string, Item>();           // bekannte Items
   const nodes = new Map<string, MiniNode>();
   const edges: MiniEdge[] = [];
   const levelByNode = new Map<string, number>();
   const nextRowIndex = new Map<number, number>();
 
-  // Indexieren auf Basis der GEMERGTEN Actions
   for (const act of mergedActions) {
     for (const out of act.outputs ?? []) {
       const iid = out.item?.id; if (!iid) continue;
       const list = actionsByOutput.get(iid) ?? [];
-      // verhindere doppelte Einträge derselben gemergten Action (falls mehrfach identischer Output)
       if (!list.includes(act)) list.push(act);
       actionsByOutput.set(iid, list);
       if (out.item) itemCache.set(out.item.id!, out.item);
@@ -139,17 +124,31 @@ export function buildKnowledgeGraphStatic(
     }
   }
 
-  // ---------- Node/Edge-Helpers ----------
-  const ensureItemNode = (itemId: string, level: number, label?: string): MiniNode => {
+  // ---------- Helpers für Nodes/Edges ----------
+  const addEdge = (sourceId: string, targetId: string, qty: number) => {
+    if (!edges.some(e => e.source === sourceId && e.target === targetId && e.qty === qty)) {
+      edges.push({ source: sourceId, target: targetId, qty });
+    }
+  };
+
+  const ensureItemNode = (
+    itemId: string,
+    level: number,
+    label?: string,
+    overrides?: Partial<Pick<MiniNode, 'img' | 'isUnknown' | 'isBase'>>
+  ): MiniNode => {
     const ex = nodes.get(itemId);
     const it = itemCache.get(itemId);
     const name = label ?? it?.name ?? itemId;
-    const img = it?.image_url && it.image_url.trim() ? it.image_url : O.defaultItemImg;
-    const base = isBase(it);
+    const base = overrides?.isBase ?? isBase(it);
+    const img = (overrides?.img !== undefined)
+      ? (overrides.img ?? '')
+      : (it?.image_url && it.image_url.trim() ? it.image_url : O.defaultItemImg);
 
     if (ex) {
       const prev = levelByNode.get(itemId) ?? level;
       if (level < prev) levelByNode.set(itemId, level);
+      if (overrides) Object.assign(ex, overrides);
       if (base) ex.isBase = true;
       return ex;
     }
@@ -163,6 +162,7 @@ export function buildKnowledgeGraphStatic(
       img,
       x: 0, y: 0, w: O.itemSize.w, h: O.itemSize.h,
       isBase: base,
+      isUnknown: overrides?.isUnknown ?? false,
     };
     nodes.set(itemId, node);
     levelByNode.set(itemId, level);
@@ -173,7 +173,12 @@ export function buildKnowledgeGraphStatic(
     (act.inputs ?? []).map(i => `${i.qty ?? 1} ${i.item?.name ?? i.item?.id ?? 'Unknown'}`).join(' + ')
     || (act.station ?? act.action_type_id ?? 'Action');
 
-  const ensureActionNode = (act: Action, level: number): MiniNode => {
+  const ensureActionNode = (
+    act: Action,
+    level: number,
+    customLabel?: string,
+    imgOverride?: string | null
+  ): MiniNode => {
     const id = act.id ?? `act_${Math.random().toString(36).slice(2)}`;
     const ex = nodes.get(id);
     const { trust, sourceName } = bestSourceMeta(act.sources);
@@ -183,10 +188,13 @@ export function buildKnowledgeGraphStatic(
       if (level < prev) levelByNode.set(id, level);
       return ex;
     }
-    const img = act.image_url && act.image_url.trim() ? act.image_url : O.defaultActionImg;
+    const img = (imgOverride ?? undefined) !== undefined
+      ? (imgOverride ?? '')
+      : (act.image_url && act.image_url.trim() ? act.image_url : O.defaultActionImg);
+
     const node: MiniNode = {
       id,
-      label: buildActionLabel(act),
+      label: customLabel ?? buildActionLabel(act),
       kind: 'action',
       trust,
       sourceName,
@@ -196,6 +204,32 @@ export function buildKnowledgeGraphStatic(
     nodes.set(id, node);
     levelByNode.set(id, level);
     return node;
+  };
+
+  // Unknown-Kette: unknown_input_for_<item> -> act_<item>_unknown -> <item>
+  const ensureUnknownChainFor = (missingItemId: string, itemLevel: number) => {
+    const actLevel = itemLevel - 1;
+    const unkActId = `act_${missingItemId}_unknown`;
+    const unkItemId = `unknown_input_for_${missingItemId}`;
+
+    // Unknown Action (ohne image url)
+    const unkAct: Action = {
+      id: unkActId,
+      inputs: [],
+      outputs: [],
+      sources: [],
+      image_url: '',               // bewusst leer
+      station: '',
+      action_type_id: 'unknown',
+    };
+    ensureActionNode(unkAct, actLevel, 'Unknown source', ''); // img ''
+
+    // Unknown Item (ohne image url)
+    ensureItemNode(unkItemId, actLevel - 1, 'Unknown Item', { img: '', isUnknown: true });
+
+    // Kanten
+    addEdge(unkItemId, unkActId, 1);
+    addEdge(unkActId, missingItemId, 1);
   };
 
   // ---------- Rekursion (rechts -> links) ----------
@@ -212,6 +246,16 @@ export function buildKnowledgeGraphStatic(
     visited.add(visitKey);
 
     const producers = actionsByOutput.get(itemId) ?? [];
+
+    // Unknown-Logik: keine Producer & kein Base → Unknown-Kette einfügen
+    const it = itemCache.get(itemId);
+    if (producers.length === 0 && !isBase(it)) {
+      ensureUnknownChainFor(itemId, level);
+      // Bei Unknown-Items keinen weiteren Abstieg
+      return;
+    }
+
+    // Producer vorhanden: expandieren
     for (const act of producers) {
       const actionLevel = level - 1;
       const actionNode = ensureActionNode(act, actionLevel);
@@ -229,6 +273,8 @@ export function buildKnowledgeGraphStatic(
 
         if (!isBase(inItem)) {
           expandForItem(inItem.id, inputLevel);
+        } else {
+          ensureItemNode(inItem.id, inputLevel);
         }
       }
     }
