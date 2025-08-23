@@ -12,6 +12,10 @@ export interface Output {
 export interface Source {
   actionId?: string;
   sourceId?: string;
+  id?: string;
+  name?: string;
+  note?: number;
+  trust?: string;
 }
 export interface Item{
   actionTypeId?: string;
