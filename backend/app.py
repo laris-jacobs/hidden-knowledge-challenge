@@ -31,6 +31,11 @@ def find_io_by_id(_list, _id, id_attr):
             results.append(item)
     return results
 
+def resolve_by_id(_id, _list):
+    for item in _list:
+        if item["id"] == _id:
+            return item
+    return None
 
 def get_actions():
     raw_actions = sql_all("SELECT * FROM action")
@@ -47,12 +52,7 @@ def get_actions():
         relevant_sources_map =  find_io_by_id(raw_sources_map, a["id"],"action_id")
         relevant_sources = []
         for s in relevant_sources_map:
-            sources_found = find_io_by_id(raw_sources, s["source_id"],"id")
-            if len(sources_found)==1:
-                relevant_sources.append(sources_found[0])
-            else:
-                log("sources_found expected 1 instead got other: " + str(len(sources_found)) + "   "+ str(sources_found))
-
+            relevant_sources.append(resolve_by_id(s["source_id"],raw_sources))
         a["inputs"] = relevant_inputs
         a["outputs"] = relevant_outputs
         a["sources"] = relevant_sources
