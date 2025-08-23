@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import {Component, inject} from '@angular/core';
 import { MiniNode, MiniEdge } from '../mini-graph/mini-graph.component';
+import {Api} from '../../services/api';
 
 @Component({
   selector: 'app-knowledge-graph',
@@ -8,6 +9,7 @@ import { MiniNode, MiniEdge } from '../mini-graph/mini-graph.component';
   styleUrls: ['./knowledge-graph.component.scss']
 })
 export class KnowledgeGraphComponent {
+   private api = inject(Api);
   // Spalten-Layout (links -> rechts): x ≈ 120 | 280 | 440 | 600 | 760 | 920
   nodes: MiniNode[] = [
     // Column 0 – Base resources
@@ -76,6 +78,9 @@ export class KnowledgeGraphComponent {
   ngOnInit() {
     this.indexGraph();
     this.detectAndMarkConflicts();
+    this.api.getAction().subscribe(x => {
+      console.log(x);
+    })
   }
 
   private indexGraph() {

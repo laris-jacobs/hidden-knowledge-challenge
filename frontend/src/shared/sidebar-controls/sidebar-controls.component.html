@@ -1,0 +1,35 @@
+<form class="control-form" (submit)="onSubmit($event)">
+  <h2 class="control-form__title">Steuerung</h2>
+
+  <!-- Optionen -->
+  <div class="control-form__group">
+    <div class="btn-group">
+      <button
+        *ngFor="let opt of options"
+        type="button"
+        class="btn btn--option"
+        [ngClass]="{'is-active': selections().includes(opt.key)}"
+        (click)="onClickOption(opt.key)"
+      >
+        {{ opt.label }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Checkboxen -->
+  <div class="control-form__group">
+    <label class="checkbox" *ngFor="let t of toggles">
+      <input
+        type="checkbox"
+        [checked]="toggleState()[t.key]"
+        (change)="onChangeToggle(t.key, $any($event.target).checked)"
+      />
+      <span>{{ t.label }}</span>
+    </label>
+  </div>
+
+  <!-- Hauptbutton -->
+  <div class="control-form__actions">
+    <button type="submit" class="btn btn--primary">Ausführen</button>
+  </div>
+</form>

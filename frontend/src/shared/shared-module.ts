@@ -6,16 +6,20 @@ import {Footer} from './footer/footer';
 import {Main} from './main/main';
 import {KnowledgeGraphComponent} from './knowledge-graph/knowledge-graph.component';
 import { MiniGraphComponent } from './mini-graph/mini-graph.component';
+import { HttpClientModule } from '@angular/common/http';
+import { SidebarControlsComponent } from './sidebar-controls/sidebar-controls.component';
 
 @NgModule({
-  declarations: [KnowledgeGraphComponent, MiniGraphComponent, Header, Footer, Main],
+  declarations: [KnowledgeGraphComponent, MiniGraphComponent, SidebarControlsComponent, Header, Footer, Main],
   imports: [
     CommonModule,
-    NgxGraphModule
+    NgxGraphModule,
+    HttpClientModule,
   ],
   exports: [
     KnowledgeGraphComponent,
     MiniGraphComponent,
+    SidebarControlsComponent,
     Header,
     Footer,
     Main

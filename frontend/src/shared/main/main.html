@@ -1,1 +1,16 @@
-<app-knowledge-graph></app-knowledge-graph>
+<div class="layout">
+  <aside class="layout__sidebar">
+    <app-sidebar-controls
+      [options]="options"
+      [toggles]="toggles"
+      [singleSelect]="true"
+      (selectionChange)="onSelection($event)"
+      (stateChange)="onState($event)"
+      (submit)="onSubmit($event)"
+    ></app-sidebar-controls>
+  </aside>
+
+  <main class="layout__content">
+    <app-knowledge-graph></app-knowledge-graph>
+  </main>
+</div>
