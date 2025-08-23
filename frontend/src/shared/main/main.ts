@@ -84,7 +84,7 @@ export class Main {
   ];
 
 
-  onSelection(keys: string) {
+  onSelection(keys: string[]) {
     console.log('Auswahl geändert:', keys);
     // -> an Graph-Service weiterreichen
 
