@@ -35,24 +35,6 @@ export class MiniGraphComponent {
   private draggingId: string | null = null;
   private dragOffset = { x: 0, y: 0 };
 
-  get edgePaths() {
-    const map = new Map(this.nodes.map(n => [n.id, n]));
-    return this.edges.map(e => {
-      const s = map.get(e.source);
-      const t = map.get(e.target);
-      if (!s || !t) return { id: e.id ?? '', d: '', cx: 0, cy: 0, label: '' };
-
-      const d = `M ${s.x} ${s.y} L ${t.x} ${t.y}`;
-      return {
-        id: e.id ?? `${e.source}->${e.target}`,
-        d,
-        cx: (s.x + t.x) / 2,
-        cy: (s.y + t.y) / 2,
-        label: e.qty?.toString() ?? ''
-      };
-    });
-  }
-
   onPointerDown(evt: PointerEvent, n: MiniNode) {
     const el = evt.currentTarget as SVGGraphicsElement;
     el.setPointerCapture?.(evt.pointerId);
@@ -72,4 +54,47 @@ export class MiniGraphComponent {
     (evt.currentTarget as SVGGraphicsElement).releasePointerCapture?.(evt.pointerId);
     this.draggingId = null;
   }
+
+  get edgePaths() {
+    const map = new Map(this.nodes.map(n => [n.id, n]));
+    return this.edges.map(e => {
+      const s = map.get(e.source);
+      const t = map.get(e.target);
+      if (!s || !t) return { id: e.id ?? '', d: '', cx: 0, cy: 0, label: '', conflict: false };
+
+      const d = `M ${s.x} ${s.y} L ${t.x} ${t.y}`;
+      return {
+        id: e.id ?? `${e.source}->${e.target}`,
+        d,
+        cx: (s.x + t.x) / 2,
+        cy: (s.y + t.y) / 2,
+        label: e.qty?.toString() ?? '',
+        conflict: !!e.conflict
+      };
+    });
+  }
+
+}
+
+export interface MiniNode {
+  id: string;
+  label: string;
+  kind: NodeKind;
+  img: string;
+  x: number; y: number; w: number; h: number;
+
+  // NEU (optional)
+  trust?: number;          // 0..1
+  sourceName?: string;     // z.B. "Official Wiki"
+  conflictKey?: string;    // gesetzt, wenn Action in Konfliktgruppe ist
+}
+
+export interface MiniEdge {
+  id?: string;
+  source: string;
+  target: string;
+  qty?: number | string;
+
+  // NEU (optional)
+  conflict?: boolean;      // true => rote Markierung
 }
