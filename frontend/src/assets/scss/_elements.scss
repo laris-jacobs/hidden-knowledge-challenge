@@ -1,7 +1,12 @@
+@use './variables' as *;
+
 .header-main {
   padding: 30px;
-  background: #c6c6c6;
+  background: $box-background;
   font-size: 25px;
   text-align: center;
   //filter: brightness(-2.5);
+}
+.card{
+
 }
