@@ -6,8 +6,10 @@
       (selectionChange)="onSelection($event)"
     ></app-sidebar-controls>
   </aside>
+  @if(nodes.length > 0 && edges.length > 0){
+    <main class="layout__content" >
+      <app-knowledge-graph [nodes]="nodes" [edges]="edges"></app-knowledge-graph>
+    </main>
+  }
 
-  <main class="layout__content">
-    <app-knowledge-graph [nodes]="nodes" [edges]="edges"></app-knowledge-graph>
-  </main>
 </div>
