@@ -5,9 +5,9 @@ const IMG_ITEM_DEFAULT   = 'imgs/items/placeholder.png';
 const IMG_ACTION_DEFAULT = 'imgs/recipes/placeholder.png';
 
 const DEF_OPTS: Required<GraphBuildOptions> = {
-  baseX: 120, colGap: 160, rowGap: 90,
+  baseX: 120, colGap: 220, rowGap: 180,
   itemSize: { w: 72,  h: 72 },
-  actionSize: { w: 108, h: 108 },
+  actionSize: { w: 200, h: 200 },
   unknownItemImg: '',                       // unknown: kein Bild
   defaultItemImg: IMG_ITEM_DEFAULT,
   defaultActionImg: IMG_ACTION_DEFAULT,
