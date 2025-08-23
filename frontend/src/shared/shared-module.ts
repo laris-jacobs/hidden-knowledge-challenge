@@ -1,7 +1,6 @@
 import {NgModule} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {NgxGraphModule} from '@swimlane/ngx-graph';
-import {Header} from './header/header';
 import {Footer} from './footer/footer';
 import {Main} from './main/main';
 import {KnowledgeGraphComponent} from './knowledge-graph/knowledge-graph.component';
@@ -10,7 +9,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { SidebarControlsComponent } from './sidebar-controls/sidebar-controls.component';
 
 @NgModule({
-  declarations: [KnowledgeGraphComponent, MiniGraphComponent, SidebarControlsComponent, Header, Footer, Main],
+  declarations: [KnowledgeGraphComponent, MiniGraphComponent, SidebarControlsComponent, Footer, Main],
   imports: [
     CommonModule,
     NgxGraphModule,
@@ -20,7 +19,6 @@ import { SidebarControlsComponent } from './sidebar-controls/sidebar-controls.co
     KnowledgeGraphComponent,
     MiniGraphComponent,
     SidebarControlsComponent,
-    Header,
     Footer,
     Main
   ]
