@@ -4,18 +4,18 @@ import {NgxGraphModule} from '@swimlane/ngx-graph';
 import {Header} from './header/header';
 import {Footer} from './footer/footer';
 import {Main} from './main/main';
-import {KnowledgeGraph} from './knowledge-graph/knowledge-graph';
-import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {KnowledgeGraphComponent} from './knowledge-graph/knowledge-graph.component';
+import { MiniGraphComponent } from './mini-graph/mini-graph.component';
 
 @NgModule({
-  declarations: [KnowledgeGraph, Header, Footer, Main],
+  declarations: [KnowledgeGraphComponent, MiniGraphComponent, Header, Footer, Main],
   imports: [
     CommonModule,
-    NgxGraphModule,
-    BrowserAnimationsModule
+    NgxGraphModule
   ],
   exports: [
-    KnowledgeGraph,
+    KnowledgeGraphComponent,
+    MiniGraphComponent,
     Header,
     Footer,
     Main

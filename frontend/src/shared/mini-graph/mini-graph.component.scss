@@ -1,0 +1,82 @@
+:host { display: block; height: 100%; }
+
+.graph-canvas {
+  width: 100%;
+  height: 80vh;
+  background: transparent;
+}
+
+/* edges */
+.edge-line { stroke: #d1d5db; stroke-width: 2; fill: none; }
+.arrow-head { fill: #d1d5db; }
+.edge-badge rect { fill: #0f172a; stroke: rgba(255,255,255,.1); }
+.edge-badge text { fill: #e5e7eb; font: 600 11px/1 ui-sans-serif, system-ui; }
+
+/* nodes */
+.card.action {
+  fill: #fff; stroke: #a16eff; stroke-width: 2.5;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,.25));
+}
+.bubble.item {
+  fill: #fff; stroke: #3a9ad9; stroke-width: 2.5;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,.25));
+}
+.caption {
+  fill: #334155;
+  font: 500 12px/1.2 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  paint-order: stroke;
+  stroke: rgba(255,255,255,.35); stroke-width: .5px; stroke-linejoin: round;
+}
+.node { cursor: grab; }
+.node:active { cursor: grabbing; }
+
+.card.action {
+  fill: #fff;                          /* Hintergrund weiß */
+  stroke: #a16eff;                     /* lila Rahmen */
+  stroke-width: 2.5;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,.25));
+}
+
+/* edges */
+.edge-line { stroke: #d1d5db; stroke-width: 2; fill: none; }
+.edge-line.conflict { stroke: #d33; stroke-width: 3; }
+.arrow-head { fill: #d1d5db; }
+.edge-badge rect { fill: #0f172a; stroke: rgba(255,255,255,.1); }
+.edge-badge text { fill: #e5e7eb; font: 600 11px/1 ui-sans-serif, system-ui; }
+.edge-badge.conflict rect { fill: #3b0f0f; stroke: rgba(255,0,0,.35); }
+.edge-badge.conflict text { fill: #fecaca; }
+
+/* nodes */
+.node.action .card.action {
+  fill: #fff;
+  stroke: #a16eff;
+  stroke-width: 2.5;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,.25));
+}
+.node.item .bubble.item {
+  fill: #fff; stroke: #3a9ad9; stroke-width: 2.5;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,.25));
+}
+
+/* Konflikt-Ring für Actions */
+.node.conflict .card.action {
+  stroke: #d33 !important;
+  stroke-width: 3.5;
+  filter: drop-shadow(0 0 0 rgba(0,0,0,0)) drop-shadow(0 0 10px rgba(211,51,51,.35));
+}
+
+/* Trust-Badge */
+.trust-badge rect {
+  fill: #f1f5f9; stroke: #cbd5e1;
+}
+.trust-badge text {
+  fill: #0f172a; font: 700 10px/1 ui-sans-serif, system-ui;
+}
+
+/* Trust-Badge bei Konflikt -> rötlich */
+.node.conflict .trust-badge rect {
+  fill: #ffe7e7; stroke: #d33;
+}
+.node.conflict .trust-badge text {
+  fill: #7f1d1d;
+}
