@@ -5,7 +5,8 @@ import {Edge, Node} from '@swimlane/ngx-graph';
   selector: 'app-knowledge-graph',
   standalone:false,
   templateUrl: './knowledge-graph.html',
-  styleUrl: './knowledge-graph.scss'
+  styleUrl: './knowledge-graph.scss',
+  host: {'class' : 'container'}
 })
 export class KnowledgeGraph { //implements OnInit, AfterViewInit {
 
