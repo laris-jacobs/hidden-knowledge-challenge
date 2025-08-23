@@ -43,22 +43,27 @@ def get_actions():
     raw_outputs = sql_all("SELECT * FROM action_output")
     raw_sources_map = sql_all("SELECT * FROM action_source")
     raw_sources = sql_all("SELECT * FROM source")
+    raw_items = sql_all("SELECT * FROM item")
     log("raw_inputs " + str(raw_inputs))
     log("raw_outputs " + str(raw_outputs))
-    result = []
     for a in raw_actions:
-        relevant_inputs =  find_io_by_id(raw_inputs, a["id"],"action_id")
-        relevant_outputs =  find_io_by_id(raw_outputs, a["id"],"action_id")
-        relevant_sources_map =  find_io_by_id(raw_sources_map, a["id"],"action_id")
+        relevant_inputs_refs =  find_io_by_id(raw_inputs, a["id"],"action_id")
+        relevant_outputs_refs =  find_io_by_id(raw_outputs, a["id"],"action_id")
+        relevant_sources_refs =  find_io_by_id(raw_sources_map, a["id"],"action_id")
         relevant_sources = []
-        for s in relevant_sources_map:
+        relevant_input_items = []
+        relevant_output_items = []
+        for s in relevant_sources_refs:
             relevant_sources.append(resolve_by_id(s["source_id"],raw_sources))
-        a["inputs"] = relevant_inputs
-        a["outputs"] = relevant_outputs
+        for inp in relevant_inputs_refs:
+            relevant_input_items.append({"item": resolve_by_id(inp["item_id"],raw_items), "qty": inp["qty"]})
+        for outp in relevant_outputs_refs:
+            relevant_output_items.append({"item": resolve_by_id(outp["item_id"],raw_items), "qty": outp["qty"]})
+        a["inputs"] = relevant_input_items
+        a["outputs"] = relevant_output_items
         a["sources"] = relevant_sources
-        result.append(a)
-    log("result " + str(result))
-    return  result
+    log("result " + str(raw_actions))
+    return  raw_actions
 
 
 def get_connection():
