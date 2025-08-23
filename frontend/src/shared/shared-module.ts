@@ -4,16 +4,18 @@ import {NgxGraphModule} from '@swimlane/ngx-graph';
 import {Header} from './header/header';
 import {Footer} from './footer/footer';
 import {Main} from './main/main';
-import {KnowledgeGraphComponent} from './knowledge-graph/knowledge-graph';
+import {KnowledgeGraphComponent} from './knowledge-graph/knowledge-graph.component';
+import { MiniGraphComponent } from './mini-graph/mini-graph.component';
 
 @NgModule({
-  declarations: [KnowledgeGraphComponent, Header, Footer, Main],
+  declarations: [KnowledgeGraphComponent, MiniGraphComponent, Header, Footer, Main],
   imports: [
     CommonModule,
-    NgxGraphModule,
+    NgxGraphModule
   ],
   exports: [
     KnowledgeGraphComponent,
+    MiniGraphComponent,
     Header,
     Footer,
     Main

@@ -1,6 +1,6 @@
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 
-import {KnowledgeGraph} from './knowledge-graph';
+import {KnowledgeGraph} from './mini-graph.component';
 
 describe('KnowledgeGraph', () => {
   let component: KnowledgeGraph;

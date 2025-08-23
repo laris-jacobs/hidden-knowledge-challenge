@@ -1,0 +1,71 @@
+<svg class="graph-canvas" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5"
+            markerWidth="6" markerHeight="6" markerUnits="strokeWidth"
+            orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" class="arrow-head"></path>
+    </marker>
+  </defs>
+
+  <!-- Edges -->
+  <g class="edges">
+    <ng-container *ngFor="let e of edgePaths">
+      <path class="edge-line" [attr.d]="e.d" marker-end="url(#arrow)"></path>
+      <g class="edge-badge" [attr.transform]="'translate(' + e.cx + ',' + e.cy + ')'">
+        <rect rx="6" ry="6" x="-12" y="-12" width="24" height="24"></rect>
+        <text text-anchor="middle" alignment-baseline="central">{{ e.label }}</text>
+      </g>
+    </ng-container>
+  </g>
+
+  <!-- Nodes -->
+  <g class="nodes">
+    <ng-container *ngFor="let n of nodes">
+      <g class="node"
+         [attr.transform]="'translate(' + (n.x - n.w/2) + ',' + (n.y - n.h/2) + ')'"
+         (pointerdown)="onPointerDown($event, n)"
+         (pointermove)="onPointerMove($event)"
+         (pointerup)="onPointerUp($event)"
+         (pointercancel)="onPointerUp($event)">
+
+        <ng-container [ngSwitch]="n.kind">
+          <!-- ACTION -->
+          <g *ngSwitchCase="'action'">
+            <!-- ClipPath pro Node -->
+            <defs>
+              <clipPath [attr.id]="'clip-' + n.id">
+                <rect [attr.width]="n.w" [attr.height]="n.h" rx="12" ry="12"></rect>
+              </clipPath>
+            </defs>
+
+            <rect class="card action"
+                  [attr.x]="n.w * 0.05"
+                  [attr.y]="n.h * 0.2"
+                  [attr.width]="n.w * 0.9"
+                  [attr.height]="n.h * 0.6"
+                  rx="12" ry="12"></rect>
+
+            <image [attr.x]="n.w * 0.1"
+                   [attr.y]="n.h * 0.1"
+                   [attr.width]="n.w * 0.8"
+                   [attr.height]="n.h * 0.8"
+                   [attr.href]="n.img || 'imgs/recipes/unknown.png'"
+                   preserveAspectRatio="xMidYMid meet"
+                   [attr.clip-path]="'url(#clip-' + n.id + ')'"
+                   pointer-events="none"></image>
+          </g>
+
+          <!-- ITEM -->
+          <g *ngSwitchCase="'item'">
+            <circle class="bubble item" [attr.cx]="n.w/2" [attr.cy]="n.h/2" [attr.r]="Math.min(n.w,n.h)/2"></circle>
+            <image [attr.x]="(n.w-48)/2" [attr.y]="(n.h-48)/2" width="48" height="48"
+                   [attr.href]="n.img || 'imgs/items/unknown.png'" [attr.preserveAspectRatio]="'xMidYMid meet'" pointer-events="none"></image>
+<!--            <text class="caption" text-anchor="middle" [attr.x]="n.w/2" [attr.y]="n.h + 16">-->
+<!--              {{ n.label }}-->
+<!--            </text>-->
+          </g>
+        </ng-container>
+      </g>
+    </ng-container>
+  </g>
+</svg>
