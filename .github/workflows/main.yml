@@ -1,0 +1,22 @@
+name: SSH Command Execution
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  ssh-command:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Execute SSH Command
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: ${{ secrets.SSH_PORT || 22 }}
+        script: |
+          cd /srv/deploy/hidden-knowledge-challenge && git checkout -- . && git pull -f && docker compose build && docker compose up -d
+
