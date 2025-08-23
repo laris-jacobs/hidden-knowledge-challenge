@@ -1,30 +1,12 @@
-import { Component, Input } from '@angular/core';
-
-export type NodeKind = 'item' | 'action';
-
-export interface MiniNode {
-  id: string;
-  label: string;
-  kind: NodeKind;
-  img: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
-
-export interface MiniEdge {
-  id?: string;
-  source: string;
-  target: string;
-  qty?: number | string;
-}
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
+import { MiniNode, MiniEdge } from '../../models/graph.models';
 
 @Component({
   selector: 'app-mini-graph',
   standalone: false,
   templateUrl: './mini-graph.component.html',
-  styleUrls: ['./mini-graph.component.scss']
+  styleUrls: ['./mini-graph.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MiniGraphComponent {
   @Input() nodes: MiniNode[] = [];
@@ -34,6 +16,10 @@ export class MiniGraphComponent {
 
   private draggingId: string | null = null;
   private dragOffset = { x: 0, y: 0 };
+
+  // optional, aber hilfreich gegen Re-Renders
+  trackByNode = (_: number, n: MiniNode) => n.id;
+  trackByEdge = (_: number, e: MiniEdge) => e.id ?? `${e.source}->${e.target}:${e.qty ?? ''}`;
 
   onPointerDown(evt: PointerEvent, n: MiniNode) {
     const el = evt.currentTarget as SVGGraphicsElement;
@@ -60,41 +46,18 @@ export class MiniGraphComponent {
     return this.edges.map(e => {
       const s = map.get(e.source);
       const t = map.get(e.target);
-      if (!s || !t) return { id: e.id ?? '', d: '', cx: 0, cy: 0, label: '', conflict: false };
-
+      if (!s || !t) {
+        return { id: e.id ?? '', d: '', cx: 0, cy: 0, label: '', conflict: false };
+      }
       const d = `M ${s.x} ${s.y} L ${t.x} ${t.y}`;
       return {
         id: e.id ?? `${e.source}->${e.target}`,
         d,
         cx: (s.x + t.x) / 2,
         cy: (s.y + t.y) / 2,
-        label: e.qty?.toString() ?? '',
+        label: e.qty != null ? String(e.qty) : '',
         conflict: !!e.conflict
       };
     });
   }
-
-}
-
-export interface MiniNode {
-  id: string;
-  label: string;
-  kind: NodeKind;
-  img: string;
-  x: number; y: number; w: number; h: number;
-
-  // NEU (optional)
-  trust?: number;          // 0..1
-  sourceName?: string;     // z.B. "Official Wiki"
-  conflictKey?: string;    // gesetzt, wenn Action in Konfliktgruppe ist
-}
-
-export interface MiniEdge {
-  id?: string;
-  source: string;
-  target: string;
-  qty?: number | string;
-
-  // NEU (optional)
-  conflict?: boolean;      // true => rote Markierung
 }

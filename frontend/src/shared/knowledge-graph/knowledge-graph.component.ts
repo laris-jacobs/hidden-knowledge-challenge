@@ -1,5 +1,5 @@
 import {Component, inject, Input} from '@angular/core';
-import { MiniNode, MiniEdge } from '../mini-graph/mini-graph.component';
+import {MiniEdge, MiniNode} from '../../models/graph.models';
 import {Api} from '../../services/api';
 
 @Component({

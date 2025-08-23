@@ -125,10 +125,10 @@ export function buildKnowledgeGraphStatic(
   }
 
   // ---------- Helpers für Nodes/Edges ----------
-  const addEdge = (sourceId: string, targetId: string, qty: number) => {
-    if (!edges.some(e => e.source === sourceId && e.target === targetId && e.qty === qty)) {
-      edges.push({ source: sourceId, target: targetId, qty });
-    }
+  const addEdge = (sourceId: string, targetId: string, qty: number, conflict = false) => {
+    const ex = edges.find(e => e.source === sourceId && e.target === targetId && e.qty === qty);
+    if (ex) { (ex as any).conflict = (ex as any).conflict || conflict; return; }
+    edges.push({ source: sourceId, target: targetId, qty, conflict } as any);
   };
 
   const ensureItemNode = (
@@ -149,7 +149,7 @@ export function buildKnowledgeGraphStatic(
       const prev = levelByNode.get(itemId) ?? level;
       if (level < prev) levelByNode.set(itemId, level);
       if (overrides) Object.assign(ex, overrides);
-      if (base) ex.isBase = true;
+      if (base) (ex as any).isBase = true;
       return ex;
     }
 
@@ -163,7 +163,7 @@ export function buildKnowledgeGraphStatic(
       x: 0, y: 0, w: O.itemSize.w, h: O.itemSize.h,
       isBase: base,
       isUnknown: overrides?.isUnknown ?? false,
-    };
+    } as any;
     nodes.set(itemId, node);
     levelByNode.set(itemId, level);
     return node;
@@ -200,7 +200,11 @@ export function buildKnowledgeGraphStatic(
       sourceName,
       img,
       x: 0, y: 0, w: O.actionSize.w, h: O.actionSize.h,
-    };
+    } as any;
+
+    // Merger-Flag für spätere Konflikt-Erkennung (nicht berücksichtigen)
+    (node as any).__isMerged = (act.action_type_id === 'merged') || (id.startsWith('act_merged_'));
+
     nodes.set(id, node);
     levelByNode.set(id, level);
     return node;
@@ -233,10 +237,6 @@ export function buildKnowledgeGraphStatic(
   };
 
   // ---------- Rekursion (rechts -> links) ----------
-  // Konvention:
-  //   Item auf Level L
-  //   Producer-Action auf Level L-1
-  //   Deren Input-Items auf Level L-2
   const visited = new Set<string>();
 
   const expandForItem = (itemId: string, level: number) => {
@@ -251,7 +251,6 @@ export function buildKnowledgeGraphStatic(
     const it = itemCache.get(itemId);
     if (producers.length === 0 && !isBase(it)) {
       ensureUnknownChainFor(itemId, level);
-      // Bei Unknown-Items keinen weiteren Abstieg
       return;
     }
 
@@ -282,6 +281,122 @@ export function buildKnowledgeGraphStatic(
 
   // Start: Ziel-Item rechts (Level 0)
   expandForItem(targetItemId, 0);
+
+  // ---------- Konflikte annotieren ----------
+  const normQty = (q?: number | string) =>
+    typeof q === 'string' ? (Number.isFinite(+q) ? +q : 1) : (q ?? 1);
+
+  /**
+   * Konfliktregel:
+   * Für denselben Output (ItemId#Qty) UND denselben Satz an Input-Item-IDs (ohne Mengen)
+   * gibt es mindestens zwei Actions, deren Input-Mengen (Qty) sich unterscheiden.
+   * Merged-Actions werden ignoriert.
+   * Markiere NUR die Output-Kanten, die zu diesem Output gehören (kein Markieren anderer Outputs/Input-Kanten).
+   */
+  const annotateConflicts = () => {
+    const nodeList = Array.from(nodes.values());
+    const nodeById = new Map(nodeList.map(n => [n.id, n]));
+
+    // actionId -> eingehende (item->action)
+    const inEdgesByAction = new Map<string, MiniEdge[]>();
+    // actionId -> ausgehende (action->item)
+    const outEdgesByAction = new Map<string, MiniEdge[]>();
+    // "<targetItemId>#<qty>" -> actionIds[] (identischer Output)
+    const outGroups = new Map<string, string[]>();
+
+    // Kanten indexieren
+    for (const e of edges) {
+      const s = nodeById.get(e.source);
+      const t = nodeById.get(e.target);
+      if (!s || !t) continue;
+
+      if (s.kind === 'item' && t.kind === 'action') {
+        const arr = inEdgesByAction.get(t.id) ?? [];
+        arr.push(e);
+        inEdgesByAction.set(t.id, arr);
+      }
+
+      if (s.kind === 'action' && t.kind === 'item') {
+        const arr = outEdgesByAction.get(s.id) ?? [];
+        arr.push(e);
+        outEdgesByAction.set(s.id, arr);
+
+        const outKey = `${t.id}#${normQty(e.qty)}`;
+        const acts = outGroups.get(outKey) ?? [];
+        if (!acts.includes(s.id)) acts.push(s.id);
+        outGroups.set(outKey, acts);
+      }
+    }
+
+    // Signatur-Helfer
+    const buildIdOnlySig = (ins: MiniEdge[]) => {
+      const ids = Array.from(new Set(ins.map(e => e.source))).sort();
+      return ids.join('|');
+    };
+    const buildQtySig = (ins: MiniEdge[]) => {
+      const sums = new Map<string, number>();
+      for (const e of ins) {
+        const id = e.source;
+        const q = normQty(e.qty);
+        sums.set(id, (sums.get(id) ?? 0) + q);
+      }
+      return Array.from(sums.entries())
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([id, q]) => `${id}#${q}`)
+        .join('|');
+    };
+
+    // Für jede Output-Gruppe: gleiche Input-IDs aber unterschiedliche Input-Mengen?
+    for (const [outKey, actionIds] of outGroups.entries()) {
+      if (actionIds.length < 2) continue;
+
+      // gruppiere innerhalb derselben Output-Gruppe nach identischem Input-ID-Satz
+      const byIdOnlySig = new Map<string, { aid: string; inQtySig: string }[]>();
+
+      for (const aid of actionIds) {
+        const actNode = nodeById.get(aid);
+        // Merged-Actions bei der Konflikterkennung auslassen
+        if (!actNode || actNode.kind !== 'action' || (actNode as any).__isMerged) continue;
+
+        const ins = inEdgesByAction.get(aid) ?? [];
+        if (ins.length === 0) continue; // Actions ohne Inputs ignorieren (z. B. Unknown)
+
+        const idOnlySig = buildIdOnlySig(ins);
+        const inQtySig  = buildQtySig(ins);
+
+        const list = byIdOnlySig.get(idOnlySig) ?? [];
+        list.push({ aid, inQtySig });
+        byIdOnlySig.set(idOnlySig, list);
+      }
+
+      // innerhalb einer Input-ID-Gruppe: mehrere unterschiedliche Mengen-Signaturen -> Konflikt
+      for (const [idOnlySig, rows] of byIdOnlySig.entries()) {
+        if (rows.length < 2) continue;
+
+        const uniqueQtySigs = new Set(rows.map(r => r.inQtySig));
+        if (uniqueQtySigs.size > 1) {
+          const conflictKey = `conflict:${outKey}|in:${idOnlySig}`;
+
+          for (const { aid } of rows) {
+            const actNode = nodeById.get(aid);
+            if (actNode?.kind === 'action') {
+              (actNode as any).conflictKey = conflictKey;
+            }
+            // NUR die Output-Kanten markieren, die genau zu diesem outKey gehören
+            for (const e of (outEdgesByAction.get(aid) ?? [])) {
+              const tgt = nodeById.get(e.target);
+              if (!tgt) continue;
+              const eKey = `${tgt.id}#${normQty(e.qty)}`;
+              if (eKey === outKey) (e as any).conflict = true;
+            }
+            // Input-Kanten NICHT markieren → verhindert rote Markierung bei anderen Outputs
+          }
+        }
+      }
+    }
+  };
+
+  annotateConflicts();
 
   // ---------- Layout ----------
   const allLevels = Array.from(levelByNode.values());
