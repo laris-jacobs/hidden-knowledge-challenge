@@ -115,3 +115,80 @@ INSERT INTO dbo.action_output (action_id, item_id, qty) VALUES
    (no action created intentionally)
    ============================ */
 -- no rows
+
+-- Happy path
+/* Ensure the item exists */
+IF NOT EXISTS (SELECT 1 FROM dbo.item WHERE id = N'crafting_table')
+    BEGIN
+        INSERT INTO dbo.item (id, name, is_base, base_harvest)
+        VALUES (N'crafting_table', N'Crafting Table', 0, NULL);
+    END
+GO
+
+/* ---------- Oak Planks -> Crafting Table (OFFICIAL) ---------- */
+IF NOT EXISTS (SELECT 1 FROM dbo.[action] WHERE id = N'act_crafting_table_oak_official')
+    BEGIN
+        INSERT INTO dbo.[action] (id, action_type_id, station)
+        VALUES (N'act_crafting_table_oak_official', N'crafting', N'crafting_table');
+
+        INSERT INTO dbo.action_source (action_id, source_id)
+        VALUES (N'act_crafting_table_oak_official', N'src_official');
+
+        INSERT INTO dbo.action_input (action_id, item_id, qty)
+        VALUES (N'act_crafting_table_oak_official', N'plank_oak', 4);
+
+        INSERT INTO dbo.action_output (action_id, item_id, qty)
+        VALUES (N'act_crafting_table_oak_official', N'crafting_table', 1);
+    END
+GO
+
+/* ---------- Oak Planks -> Crafting Table (CONFLICT) ---------- */
+IF NOT EXISTS (SELECT 1 FROM dbo.[action] WHERE id = N'act_crafting_table_oak_conflict')
+    BEGIN
+        INSERT INTO dbo.[action] (id, action_type_id, station)
+        VALUES (N'act_crafting_table_oak_conflict', N'crafting', N'crafting_table');
+
+        INSERT INTO dbo.action_source (action_id, source_id)
+        VALUES (N'act_crafting_table_oak_conflict', N'src_conflict');
+
+        INSERT INTO dbo.action_input (action_id, item_id, qty)
+        VALUES (N'act_crafting_table_oak_conflict', N'plank_oak', 4);
+
+        INSERT INTO dbo.action_output (action_id, item_id, qty)
+        VALUES (N'act_crafting_table_oak_conflict', N'crafting_table', 1);
+    END
+GO
+
+/* ---------- Jungle Planks -> Crafting Table (OFFICIAL) ---------- */
+IF NOT EXISTS (SELECT 1 FROM dbo.[action] WHERE id = N'act_crafting_table_jungle_official')
+    BEGIN
+        INSERT INTO dbo.[action] (id, action_type_id, station)
+        VALUES (N'act_crafting_table_jungle_official', N'crafting', N'crafting_table');
+
+        INSERT INTO dbo.action_source (action_id, source_id)
+        VALUES (N'act_crafting_table_jungle_official', N'src_official');
+
+        INSERT INTO dbo.action_input (action_id, item_id, qty)
+        VALUES (N'act_crafting_table_jungle_official', N'plank_jungle', 4);
+
+        INSERT INTO dbo.action_output (action_id, item_id, qty)
+        VALUES (N'act_crafting_table_jungle_official', N'crafting_table', 1);
+    END
+GO
+
+/* ---------- Jungle Planks -> Crafting Table (CONFLICT) ---------- */
+IF NOT EXISTS (SELECT 1 FROM dbo.[action] WHERE id = N'act_crafting_table_jungle_conflict')
+    BEGIN
+        INSERT INTO dbo.[action] (id, action_type_id, station)
+        VALUES (N'act_crafting_table_jungle_conflict', N'crafting', N'crafting_table');
+
+        INSERT INTO dbo.action_source (action_id, source_id)
+        VALUES (N'act_crafting_table_jungle_conflict', N'src_conflict');
+
+        INSERT INTO dbo.action_input (action_id, item_id, qty)
+        VALUES (N'act_crafting_table_jungle_conflict', N'plank_jungle', 4);
+
+        INSERT INTO dbo.action_output (action_id, item_id, qty)
+        VALUES (N'act_crafting_table_jungle_conflict', N'crafting_table', 1);
+    END
+GO

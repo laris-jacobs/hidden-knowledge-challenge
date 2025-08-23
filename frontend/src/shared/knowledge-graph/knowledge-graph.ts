@@ -1,29 +1,41 @@
-import {Component} from '@angular/core';
-import {Edge, Node} from '@swimlane/ngx-graph';
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { NgxGraphModule, Node, Edge } from '@swimlane/ngx-graph';
+
+type NodeKind = 'item' | 'action';
+
+interface GNode extends Node {
+  data?: { kind: NodeKind; img?: string; caption?: string };
+}
+interface GEdge extends Edge {
+  data?: { qty?: number };
+}
 
 @Component({
   selector: 'app-knowledge-graph',
-  standalone:false,
+  standalone: false,
   templateUrl: './knowledge-graph.html',
-  styleUrl: './knowledge-graph.scss',
-  host: {'class' : 'container'}
+  styleUrls: ['./knowledge-graph.scss']
 })
-export class KnowledgeGraph { //implements OnInit, AfterViewInit {
-
-  nodes: Node[] = [
-    { id: 'angular', label: 'Angular' },
-    { id: 'typescript', label: 'TypeScript' },
-    { id: 'rxjs', label: 'RxJS' },
-    { id: 'ngrx', label: 'NgRx' },
-    { id: 'html', label: 'HTML' },
-    { id: 'css', label: 'CSS' }
+export class KnowledgeGraphComponent {
+  nodes: GNode[] = [
+    { id: 'cobble', label: 'Cobblestone', data: { kind: 'item', img: '/imgs/items/cobblestone.png' } },
+    { id: 'stick',  label: 'Stick',       data: { kind: 'item', img: '/imgs/items/stick.png' } },
+    { id: 'pick',   label: 'Stone Pickaxe', data: { kind: 'item', img: '/imgs/items/stone_pickaxe.png' } },
+    {
+      id: 'act_pickaxe_correct',
+      label: 'Craft @ table',
+      data: {
+        kind: 'action',
+        img: '/imgs/recipes/act_pickaxe_correct.png',
+        caption: '3 Cobble + 2 Sticks'
+      }
+    }
   ];
 
-  links: Edge[] = [
-    { source: 'angular', target: 'typescript', label: 'uses' },
-    { source: 'angular', target: 'rxjs', label: 'reactive' },
-    { source: 'angular', target: 'ngrx', label: 'state' },
-    { source: 'angular', target: 'html', label: 'templates' },
-    { source: 'html', target: 'css', label: 'style' }
+  links: GEdge[] = [
+    { source: 'cobble', target: 'act_pickaxe_correct', data: { qty: 3 } },
+    { source: 'stick',  target: 'act_pickaxe_correct', data: { qty: 2 } },
+    { source: 'act_pickaxe_correct', target: 'pick',   data: { qty: 1 } }
   ];
 }

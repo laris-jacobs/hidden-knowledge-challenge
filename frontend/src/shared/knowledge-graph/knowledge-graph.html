@@ -1,13 +1,56 @@
-<div class="container">
-  <ngx-graph
-    [links]="links"
-    [nodes]="nodes"
-    [layout]="'dagreCluster'"
-    [autoZoom] ="false"
-    [panOnZoom]="false"
+<!-- knowledge-graph.html -->
+<ngx-graph
+  [nodes]="nodes"
+  [links]="links"
+  [autoCenter]="true"
+  [autoZoom]="true"
+  [panningEnabled]="true"
+  style="height: 80vh; width: 100%;"
+>
 
-    [draggingEnabled]="true"
-    style="height: 500px; width: 100%;position: relative; display: block">
-  </ngx-graph>
-</div>
+  <!-- (optional) marker defs, etc. -->
+  <ng-template #defsTemplate>
+    <svg:marker id="arrow" viewBox="0 -5 10 10" refX="8" refY="0" markerWidth="4" markerHeight="4" orient="auto">
+      <svg:path d="M0,-5L10,0L0,5" class="arrow-head" />
+    </svg:marker>
+  </ng-template>
 
+  <!-- Node template -->
+  <ng-template #nodeTemplate let-node>
+    <svg:g class="node">
+      <!-- native tooltip -->
+      <svg:title>{{ node.label }}</svg:title>
+
+      <!-- ACTION node: rounded square with recipe image -->
+      <ng-container *ngIf="node.data?.kind === 'action'; else itemTpl">
+        <svg:rect x="-54" y="-54" rx="10" ry="10" width="108" height="108" class="node-box action"></svg:rect>
+        <svg:image x="-48" y="-48" width="96" height="96" [attr.href]="node.data?.img || ''"></svg:image>
+        <svg:text class="caption" text-anchor="middle" y="70">
+          {{ node.data?.caption || node.label }}
+        </svg:text>
+      </ng-container>
+
+      <!-- ITEM node: circle with item icon -->
+      <ng-template #itemTpl>
+        <svg:circle r="36" class="node-circle item"></svg:circle>
+        <svg:image x="-24" y="-24" width="48" height="48" [attr.href]="node.data?.img || ''"></svg:image>
+        <svg:text class="caption" text-anchor="middle" y="48">{{ node.label }}</svg:text>
+      </ng-template>
+    </svg:g>
+  </ng-template>
+
+  <!-- Link (edge) template with qty badge -->
+  <ng-template #linkTemplate let-link>
+    <svg:g class="edge">
+      <svg:path class="line" stroke-width="2" marker-end="url(#arrow)"></svg:path>
+      <svg:g class="edge-label" transform="translate(0, -4)">
+        <svg:rect class="edge-badge" rx="6" ry="6" x="-10" y="-12" width="22" height="18"></svg:rect>
+        <svg:text class="edge-text" text-anchor="middle" alignment-baseline="central">
+          {{ link.data?.qty ?? link.label }}
+        </svg:text>
+      </svg:g>
+      <svg:polygon class="arrow-head"></svg:polygon>
+    </svg:g>
+  </ng-template>
+
+</ngx-graph>

@@ -1,1 +1,33 @@
-svg { border: 1px solid #ccc; height: 500px!important;}
+/* knowledge-graph.scss */
+:host {
+  --item: #3a9ad9;
+  --action: #a16eff;
+  --stroke: #cfd8dc;
+  --badge: #263238;
+  --badge-text: #eceff1;
+}
+
+.node-box.action {
+  fill: #fff;
+  stroke: var(--action);
+  stroke-width: 2;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.25));
+}
+
+.node-circle.item {
+  fill: #fff;
+  stroke: var(--item);
+  stroke-width: 2;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.25));
+}
+
+.caption {
+  font-size: 11px;
+  fill: #263238;
+}
+
+.edge .line { stroke: var(--stroke); }
+.arrow-head { fill: var(--stroke); }
+
+.edge-badge { fill: var(--badge); opacity: .9; }
+.edge-text  { fill: var(--badge-text); font-size: 11px; font-weight: 600; }
