@@ -36,14 +36,17 @@ def get_actions():
     raw_actions = sql_all("SELECT * FROM action")
     raw_inputs = sql_all("SELECT * FROM action_input")
     raw_outputs = sql_all("SELECT * FROM action_output")
+    raw_sources = sql_all("SELECT * FROM soure")
     log("raw_inputs " + str(raw_inputs))
     log("raw_outputs " + str(raw_outputs))
     result = []
     for a in raw_actions:
         relevant_inputs =  find_by_id(raw_inputs, a["id"])
         relevant_outputs =  find_by_id(raw_outputs, a["id"])
+        relevant_sources =  find_by_id(raw_sources, a["id"])
         a["inputs"] = relevant_inputs
         a["outputs"] = relevant_outputs
+        a["sources"] = relevant_sources
         result.append(a)
     log("result " + str(result))
     return  result
