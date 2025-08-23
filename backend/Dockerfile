@@ -17,9 +17,11 @@ COPY installodbc.sh .
 RUN chmod +x installodbc.sh && ./installodbc.sh
 COPY pyproject.toml /backend
 RUN uv sync
+RUN uv add pydevd-pycharm
+RUN uv sync
 COPY . /backend
-# Expose port
 EXPOSE 8080
+EXPOSE 5678
 
-# Run Flask app using uvx
-CMD ["uv",  "run", "app.py"]
+
+ENTRYPOINT exec uv run app.py

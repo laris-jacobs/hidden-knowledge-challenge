@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    container_name: mc-backend
+    ports:
+      - "8080:8080"
+      - "5678:5678"
+    restart: unless-stopped

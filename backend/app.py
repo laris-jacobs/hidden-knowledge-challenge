@@ -1,8 +1,6 @@
 import datetime
 import subprocess
 from typing import Dict, List
-
-from dotenv import load_dotenv
 from flask import Flask, jsonify
 import pyodbc
 app = Flask(__name__)
