@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { SidebarControlsComponent, ControlOption, ControlToggle } from '../sidebar-controls/sidebar-controls.component';
 import {SharedModule} from '../shared-module';
+import {Payload, State} from '../../models/input.model';
 
 @Component({
   selector: 'app-main',
@@ -27,11 +28,11 @@ export class Main {
     // -> an Graph-Service weiterreichen
   }
 
-  onState(state: { selections: string[]; toggles: Record<string, boolean> }) {
+  onState(state: State) {
     console.log('Gesamtzustand:', state);
   }
 
-  onSubmit(payload: { selections: string[]; toggles: Record<string, boolean> }) {
+  onSubmit(payload: Payload) {
     console.log('Ausführen:', payload);
     // -> Graph aktualisieren/neu rendern
   }
