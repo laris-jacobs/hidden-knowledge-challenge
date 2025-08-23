@@ -9,7 +9,9 @@ import {Action, Item, Payload} from '../models/input.model';
 export class Api {
   public static API_URL = 'http://74.161.161.50:8080/';
 
-  public http = inject(HttpClient);
+  private  http = inject(HttpClient);
+  public  actions: Action [] = [];
+
 
   public getAction(): Observable<Action[]> {
 

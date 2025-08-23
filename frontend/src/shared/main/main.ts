@@ -1,4 +1,4 @@
-import {Component, inject, Input} from '@angular/core';
+import {Component, inject, Input, OnInit} from '@angular/core';
 import { SidebarControlsComponent, ControlOption, ControlToggle } from '../sidebar-controls/sidebar-controls.component';
 import {SharedModule} from '../shared-module';
 import {Payload, State} from '../../models/input.model';
@@ -12,7 +12,7 @@ import {tap} from 'rxjs';
   styleUrl: './main.scss',
   standalone: false,
 })
-export class Main {
+export class Main implements OnInit{
   private api = inject(Api);
   // Beispiel: nur 3 Optionen + 3 Checkboxen
   options: ControlOption[] = [
@@ -21,6 +21,13 @@ export class Main {
     { key: 'iron_sword', label: 'Iron sword', imgSrc: '/imgs/achievements/iron_sword.png' },
     { key: 'diamond_sword', label: 'diamond_sword', imgSrc: '/imgs/achievements/diamond_sword.png' },
   ];
+  ngOnInit(): void {
+
+    this.api.getAction().subscribe(result => {
+      this.api.actions = result;
+      console.log(this.api.actions);
+    });
+  }
 
   nodes: MiniNode[] = [
     // Column 0 – Base resources
@@ -87,7 +94,7 @@ export class Main {
   onSelection(keys: string[]) {
     console.log('Auswahl geändert:', keys);
     // -> an Graph-Service weiterreichen
-
+    //@todo use this.api.actions to map
   }
 
 
