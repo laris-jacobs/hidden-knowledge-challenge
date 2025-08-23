@@ -3,15 +3,14 @@ import { GraphResult, MiniNode, MiniEdge, GraphBuildOptions } from '../models/gr
 
 const IMG_ITEM_DEFAULT   = 'imgs/items/placeholder.png';
 const IMG_ACTION_DEFAULT = 'imgs/recipes/placeholder.png';
-// Hinweis: Für unknown-Knoten verwenden wir jetzt bewusst '' (kein Bild).
-const IMG_UNKNOWN        = '';
 
 // Defaults fürs Layout
 const DEF_OPTS: Required<GraphBuildOptions> = {
   baseX: 120, colGap: 160, rowGap: 90,
   itemSize: { w: 72,  h: 72 },
   actionSize: { w: 108, h: 108 },
-  unknownItemImg: IMG_UNKNOWN,          // leer
+  // werden in dieser Basis-Variante nicht benötigt, bleiben aber für Kompatibilität
+  unknownItemImg: '',
   defaultItemImg: IMG_ITEM_DEFAULT,
   defaultActionImg: IMG_ACTION_DEFAULT,
 };
@@ -23,13 +22,13 @@ export function buildKnowledgeGraphStatic(
 ): GraphResult {
   const O = { ...DEF_OPTS, ...opts };
 
-  // --- Indizes & Caches (nur lokal in dieser Funktion) ---
+  // --- Indizes & Caches ---
   const actionsByOutput = new Map<string, Action[]>(); // itemId -> Actions, die dieses Item ausgeben
   const itemCache = new Map<string, Item>();           // bekannte Items aus inputs/outputs
   const nodes = new Map<string, MiniNode>();
   const edges: MiniEdge[] = [];
-  const levelByNode = new Map<string, number>();       // für Spaltenlayout
-  const nextRowIndex = new Map<number, number>();      // Level -> y-Reihe
+  const levelByNode = new Map<string, number>();       // Spalten-Index (kleiner = weiter links)
+  const nextRowIndex = new Map<number, number>();      // Level -> nächste freie Zeile
 
   // Indexieren
   for (const act of actions) {
@@ -45,7 +44,7 @@ export function buildKnowledgeGraphStatic(
     }
   }
 
-  // ---------- Hilfsfunktionen ----------
+  // ---------- Utils ----------
   const parseTrust = (t?: string) => {
     const n = parseFloat((t ?? '').trim());
     return Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : 0.5;
@@ -69,8 +68,7 @@ export function buildKnowledgeGraphStatic(
       const s = v.toLowerCase();
       return s === 'true' || s === '1' || s === 'yes';
     }
-    if (it.base_harvest != null) return true;
-    return false;
+    return it.base_harvest != null; // Base, wenn sammelbar
   };
 
   const addEdge = (sourceId: string, targetId: string, qty: number) => {
@@ -79,29 +77,28 @@ export function buildKnowledgeGraphStatic(
     }
   };
 
-  const ensureItemNode = (itemId: string, level: number, label?: string, markUnknown = false): MiniNode => {
+  const ensureItemNode = (itemId: string, level: number, label?: string): MiniNode => {
     const ex = nodes.get(itemId);
     const it = itemCache.get(itemId);
     const name = label ?? it?.name ?? itemId;
+    const img = it?.image_url && it.image_url.trim() ? it.image_url : O.defaultItemImg;
     const base = isBase(it);
 
     if (ex) {
       const prev = levelByNode.get(itemId) ?? level;
       if (level < prev) levelByNode.set(itemId, level);
-      if (markUnknown) { ex.isUnknown = true; ex.label = `${name} (unknown)`; ex.img = ''; } // <- kein Bild
       if (base) ex.isBase = true;
       return ex;
     }
 
     const node: MiniNode = {
       id: itemId,
-      label: markUnknown ? `${name} (unknown)` : name,
+      label: name,
       kind: 'item',
       trust: 0.95,                 // neutral für Items
       sourceName: 'Aggregated',
-      img: markUnknown ? '' : O.defaultItemImg, // <- unknown: leer
+      img,
       x: 0, y: 0, w: O.itemSize.w, h: O.itemSize.h,
-      isUnknown: markUnknown,
       isBase: base,
     };
     nodes.set(itemId, node);
@@ -113,14 +110,7 @@ export function buildKnowledgeGraphStatic(
     (act.inputs ?? []).map(i => `${i.qty ?? 1} ${i.item?.name ?? i.item?.id ?? 'Unknown'}`).join(' + ')
     || (act.station ?? act.action_type_id ?? 'Action');
 
-  const ensureActionNode = (
-    act: Action,
-    level: number,
-    trust: number,
-    sourceName: string,
-    customLabel?: string,
-    imgOverride?: string | null
-  ): MiniNode => {
+  const ensureActionNode = (act: Action, level: number, trust: number, sourceName: string): MiniNode => {
     const id = act.id ?? `act_${Math.random().toString(36).slice(2)}`;
     const ex = nodes.get(id);
     if (ex) {
@@ -128,13 +118,14 @@ export function buildKnowledgeGraphStatic(
       if (level < prev) levelByNode.set(id, level);
       return ex;
     }
+    const img = act.image_url && act.image_url.trim() ? act.image_url : O.defaultActionImg;
     const node: MiniNode = {
       id,
-      label: customLabel ?? buildActionLabel(act),
+      label: buildActionLabel(act),
       kind: 'action',
       trust,
       sourceName,
-      img: (imgOverride ?? undefined) !== undefined ? (imgOverride ?? '') : O.defaultActionImg, // erlaubte leere img
+      img,
       x: 0, y: 0, w: O.actionSize.w, h: O.actionSize.h,
     };
     nodes.set(id, node);
@@ -142,97 +133,63 @@ export function buildKnowledgeGraphStatic(
     return node;
   };
 
-  // Unknown-Kette: unknownItem -> unknownAction -> missingItem
-  const ensureUnknownChainFor = (missingItemId: string, itemLevelHint: number) => {
-    const itemLevel = levelByNode.get(missingItemId) ?? itemLevelHint;
-    const actLevel = itemLevel - 1;
-    const unkActId = `act_${missingItemId}_unknown`;
-    const unkItemId = `unknown_input_for_${missingItemId}`;
+  // ---------- Rekursion (immer weiter nach links) ----------
+  // Konvention:
+  // - Item auf Level L
+  // - Action, die dieses Item produziert, auf Level L-1
+  // - Deren Input-Items auf Level L-2
+  // => Ziel-Item startet bei Level 0 (rechts), Inputs zunehmend negativ (links)
+  const visited = new Set<string>(); // optionaler Schutz gegen Zyklen (pro Item)
 
-    // Unknown Action (ohne img)
-    const unkAct: Action = {
-      id: unkActId,
-      inputs: [],
-      outputs: [],
-      sources: [],
-      image_url: '',
-      station: '',
-      action_type_id: 'unknown'
-    };
-    ensureActionNode(unkAct, actLevel, 0.5, 'Unknown', 'Unknown source', ''); // img ''
+  const expandForItem = (itemId: string, level: number) => {
+    // Item anlegen (auf Level L)
+    ensureItemNode(itemId, level);
 
-    // Unknown Item (ohne img)
-    ensureItemNode(
-      unkItemId,
-      actLevel + 1,
-      'Unknown Item',
-      true // markUnknown true -> img ''
-    );
+    // Zyklen vermeiden (bei exotischen Daten)
+    const visitKey = `${itemId}@${level}`;
+    if (visited.has(visitKey)) return;
+    visited.add(visitKey);
 
-    // Kanten: unknownItem -> unknownAction -> missingItem
-    addEdge(unkItemId, unkActId, 1);
-    addEdge(unkActId, missingItemId, 1);
-  };
-
-  // ---------- Rekursion: von Ziel-Item rückwärts expandieren ----------
-  const expandForItem = (itemId: string, levelFromInputs: number): boolean => {
+    // Alle Producer-Actions (falls keine: Base-Items terminieren hier sowieso)
     const producers = actionsByOutput.get(itemId) ?? [];
-    const produced = producers.length > 0;
-
-    // Ziel-/Output-Item sicherstellen (liegt rechts von seiner Action)
-    ensureItemNode(itemId, levelFromInputs + 1);
-
     for (const act of producers) {
       const { trust, sourceName } = bestSource(act.sources);
-      const actLevel = levelFromInputs; // Action links vom Output-Item
-      const actNode = ensureActionNode(act, actLevel, trust, sourceName);
+      const actionLevel = level - 1;
+      const actionNode = ensureActionNode(act, actionLevel, trust, sourceName);
 
-      // Kante: Action -> Output (nur die zum gewünschten Output)
+      // Action → dieses Output-Item (nur die passende Output-Menge)
       const out = (act.outputs ?? []).find(o => o.item?.id === itemId);
-      addEdge(actNode.id, itemId, out?.qty ?? 1);
+      addEdge(actionNode.id, itemId, out?.qty ?? 1);
 
-      // Inputs: Item -> Action
+      // Inputs: Item → Action und rekursiv weiter nach links
       for (const inp of (act.inputs ?? [])) {
         const inItem = inp.item; if (!inItem?.id) continue;
-        ensureItemNode(inItem.id, actLevel + 1);
-        addEdge(inItem.id, actNode.id, inp.qty ?? 1);
 
-        const hasProducer = expandForItem(inItem.id, actLevel + 1);
-        if (!hasProducer && !isBase(inItem)) {
-          // NEU: ganze Unknown-Kette für dieses Input-Item
-          // 1) fehlendes Item als (unknown) kennzeichnen, ohne Bild
-          ensureItemNode(inItem.id, actLevel + 1, inItem.name, /*markUnknown*/ true);
-          // 2) Unknown-Kette unknownItem -> unknownAction -> inItem
-          ensureUnknownChainFor(inItem.id, actLevel + 1);
+        // Input-Item liegt zwei Spalten links vom Output-Item
+        const inputLevel = level - 2;
+        ensureItemNode(inItem.id, inputLevel);
+        addEdge(inItem.id, actionNode.id, inp.qty ?? 1);
+
+        // Rekursion nur, wenn kein Base-Item
+        if (!isBase(inItem)) {
+          expandForItem(inItem.id, inputLevel);
+        } else {
+          // Base-Items werden angelegt, aber nicht weiter expandiert
+          ensureItemNode(inItem.id, inputLevel);
         }
       }
     }
-
-    return produced;
   };
 
-  // Starte beim Ziel
-  const targetHasProducer = expandForItem(targetItemId, 0);
+  // Start: Ziel-Item auf Level 0 (rechts)
+  expandForItem(targetItemId, 0);
 
-  // Falls das Ziel selbst keinen Producer hat & nicht Base → komplette Unknown-Kette
-  const tItem = itemCache.get(targetItemId);
-  const tIsBase = isBase(tItem);
-  const tNode = ensureItemNode(targetItemId, 1, tItem?.name ?? targetItemId, /*markUnknown*/ !targetHasProducer && !tIsBase);
-
-  if (!targetHasProducer && !tIsBase) {
-    // komplette Unknown-Kette für das Ziel
-    ensureUnknownChainFor(targetItemId, 1);
-    // Ziel-Node sicher als unknown ohne Bild
-    tNode.isUnknown = true;
-    tNode.label = `${tNode.label}`;
-    tNode.img = ''; // kein Bild
-  }
-
-  // ---------- Einfaches Spalten-Layout ----------
-  const levels = Array.from(levelByNode.values());
-  const minLevel = Math.min(...levels);
+  // ---------- Layout ----------
+  // Levels normalisieren: kleinster Level -> 0
+  const allLevels = Array.from(levelByNode.values());
+  const minLevel = Math.min(...allLevels);
   for (const n of nodes.values()) {
-    const lvl = (levelByNode.get(n.id)! - minLevel);
+    const lvl = (levelByNode.get(n.id)! - minLevel); // >= 0
     const x = O.baseX + lvl * O.colGap;
     const row = nextRowIndex.get(lvl) ?? 0;
     const y = 120 + row * O.rowGap;
