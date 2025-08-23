@@ -19,8 +19,8 @@ export class Api {
     return this.http.get<Item[]>(Api.API_URL + 'item');
   }
 
-  public requestInformation(payload: Payload): Observable<Action[]>{
+  public query(payload: Payload): Observable<Action[]>{
 
-    return this.http.post<Action[]>(Api.API_URL +'', payload)
+    return this.http.post<Action[]>(Api.API_URL +'query', payload);
   }
 }

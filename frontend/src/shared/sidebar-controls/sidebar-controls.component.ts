@@ -25,8 +25,6 @@ export class SidebarControlsComponent {
   @Input() initialToggleState: Record<string, boolean> = {};
 
   @Output() selectionChange = new EventEmitter<string[]>();
-  @Output() stateChange = new EventEmitter<{ selections: string[]; toggles: Record<string, boolean> }>();
-  @Output() submit = new EventEmitter<{ selections: string[]; toggles: Record<string, boolean> }>();
 
   selections = signal<string[]>([]);
   toggleState = signal<Record<string, boolean>>({});
@@ -46,17 +44,5 @@ export class SidebarControlsComponent {
 
     this.selections.set(next);
     this.selectionChange.emit(next);
-    this.stateChange.emit({ selections: next, toggles: this.toggleState() });
-  }
-
-  onChangeToggle(key: string, checked: boolean) {
-    const next = { ...this.toggleState(), [key]: checked };
-    this.toggleState.set(next);
-    this.stateChange.emit({ selections: this.selections(), toggles: next });
-  }
-
-  onSubmit(ev: Event) {
-    ev.preventDefault();
-    this.submit.emit({ selections: this.selections(), toggles: this.toggleState() });
   }
 }

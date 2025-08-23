@@ -1,13 +1,20 @@
 .layout {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   grid-template-columns: 1fr 2fr; // 1/3 – 2/3
   min-height: 100vh;
 
   &__sidebar {
+    display: flex;
+    justify-content: center;
+    width: 100%;
     padding: 1.25rem;
+    position: relative;
   }
 
   &__content {
+    display: block;
+    position: relative;
     padding: 1.25rem;
     overflow: hidden;
 

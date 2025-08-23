@@ -1,51 +1,32 @@
-<form class="control-form" (submit)="onSubmit($event)">
-  <div class="control-form__header">
-    <img
-      class="header-img"
-      src="/minecraft_advancement.png"
-      alt="Steuerung"
-      loading="lazy"
-    />
-  </div>
+<div class="control-form__header">
+  <img
+    class="header-img"
+    src="/minecraft_advancement.png"
+    alt="Steuerung"
+    loading="lazy"
+  />
+</div>
 
-  <!-- Nur Bilder -->
-  <div class="control-form__group">
-    <div class="image-grid">
-      <button
-        *ngFor="let opt of options"
-        type="button"
-        class="img-option"
-        [class.is-active]="selections().includes(opt.key)"
-        (click)="onClickOption(opt.key)"
-        [attr.aria-pressed]="selections().includes(opt.key)"
-        [attr.aria-label]="opt.label"
-      >
-        <div class="img-wrap" *ngIf="opt.imgSrc; else textOnly">
-          <img [src]="opt.imgSrc" [alt]="opt.imgAlt || opt.label" loading="lazy" />
+<!-- Nur Bilder -->
+<div class="control-form__group">
+  <div class="image-grid">
+    <button
+      *ngFor="let opt of options"
+      type="button"
+      class="img-option"
+      [class.is-active]="selections().includes(opt.key)"
+      (click)="onClickOption(opt.key)"
+      [attr.aria-pressed]="selections().includes(opt.key)"
+      [attr.aria-label]="opt.label"
+    >
+      <div class="img-wrap" *ngIf="opt.imgSrc; else textOnly">
+        <img [src]="opt.imgSrc" [alt]="opt.imgAlt || opt.label" loading="lazy" />
+      </div>
+      <ng-template #textOnly>
+        <div class="img-wrap img-wrap--placeholder">
+          <span class="placeholder-text">{{ opt.label }}</span>
         </div>
-        <ng-template #textOnly>
-          <div class="img-wrap img-wrap--placeholder">
-            <span class="placeholder-text">{{ opt.label }}</span>
-          </div>
-        </ng-template>
-      </button>
-    </div>
+      </ng-template>
+    </button>
   </div>
-
-  <!-- Checkboxen -->
-  <div class="control-form__group">
-    <label class="checkbox" *ngFor="let t of toggles">
-      <input
-        type="checkbox"
-        [checked]="toggleState()[t.key]"
-        (change)="onChangeToggle(t.key, $any($event.target).checked)"
-      />
-      <span>{{ t.label }}</span>
-    </label>
-  </div>
-
-  <!-- Hauptbutton -->
-  <div class="control-form__actions">
-    <button type="submit" class="btn btn--primary">Ausführen</button>
-  </div>
-</form>
+</div>
