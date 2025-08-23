@@ -32,7 +32,7 @@ export class KnowledgeGraphComponent {
 
     // Column 5 – Actions (Pickaxe Varianten)
     { id: 'act_pickaxe_ok',   label: '3 Cobble + 2 Sticks', trust: 0.95, sourceName: 'Official Wiki', kind: 'action', img: 'imgs/recipes/act_pickaxe_correct.png', x: 760, y: 340, w: 108, h: 108 },
-    { id: 'act_pickaxe_bad',  label: '2 Cobble + 2 Sticks', trust: 0.12, sourceName: 'Official Wiki', kind: 'action', img: 'imgs/recipes/act_pickaxe_bad.png',     x: 760, y: 440, w: 108, h: 108 },
+    { id: 'act_pickaxe_bad',  label: '2 Cobble + 2 Sticks', trust: 0.12, sourceName: 'Untrusted Wiki', kind: 'action', img: 'imgs/recipes/act_pickaxe_bad.png',     x: 760, y: 440, w: 108, h: 108 },
 
     // Optional: unbekannter Weg (Missing relevant knowledge)
     { id: 'stone_rod',           label: 'Stone Rod (unknown)', trust: 0.95, sourceName: 'Official Wiki', kind: 'item',   img: 'imgs/items/unknown.png',                 x: 600, y: 520, w: 72,  h: 72 },
