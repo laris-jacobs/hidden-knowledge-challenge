@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import {Component, Input} from '@angular/core';
 import { SidebarControlsComponent, ControlOption, ControlToggle } from '../sidebar-controls/sidebar-controls.component';
 import {SharedModule} from '../shared-module';
 import {Payload, State} from '../../models/input.model';
@@ -10,17 +10,16 @@ import {Payload, State} from '../../models/input.model';
   standalone: false,
 })
 export class Main {
-  // Beispiel: nur 3 Optionen + 3 Checkboxen
   options: ControlOption[] = [
-    { key: 'p1', label: 'Personen' },
-    { key: 'o1', label: 'Orte' },
-    { key: 'e1', label: 'Ereignisse' },
+    { key: 'crafting_table', label: 'Crafting table', imgSrc: '/imgs/achievements/crafting_table.png' },
+    { key: 'stone_pickaxe', label: 'Stone pickaxe', imgSrc: '/imgs/achievements/stone_pickaxe.png' },
+    { key: 'iron_sword', label: 'Iron sword', imgSrc: '/imgs/achievements/iron_sword.png' },
+    { key: 'diamond_sword', label: 'diamond_sword', imgSrc: '/imgs/achievements/diamond_sword.png' },
   ];
 
   toggles: ControlToggle[] = [
-    { key: 'directed', label: 'Gerichteter Graph' },
-    { key: 'weighted', label: 'Gewichtete Kanten' },
-    { key: 'cluster',  label: 'Cluster zeigen' },
+    { key: 'flagA', label: 'Official Minecraft Wiki' },
+    { key: 'flagB', label: 'Minecraft Fandom' },
   ];
 
   onSelection(keys: string[]) {

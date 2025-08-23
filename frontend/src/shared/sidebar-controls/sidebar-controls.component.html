@@ -1,17 +1,33 @@
 <form class="control-form" (submit)="onSubmit($event)">
-  <h2 class="control-form__title">Steuerung</h2>
+  <div class="control-form__header">
+    <img
+      class="header-img"
+      src="/minecraft_advancement.png"
+      alt="Steuerung"
+      loading="lazy"
+    />
+  </div>
 
-  <!-- Optionen -->
+  <!-- Nur Bilder -->
   <div class="control-form__group">
-    <div class="btn-group">
+    <div class="image-grid">
       <button
         *ngFor="let opt of options"
         type="button"
-        class="btn btn--option"
-        [ngClass]="{'is-active': selections().includes(opt.key)}"
+        class="img-option"
+        [class.is-active]="selections().includes(opt.key)"
         (click)="onClickOption(opt.key)"
+        [attr.aria-pressed]="selections().includes(opt.key)"
+        [attr.aria-label]="opt.label"
       >
-        {{ opt.label }}
+        <div class="img-wrap" *ngIf="opt.imgSrc; else textOnly">
+          <img [src]="opt.imgSrc" [alt]="opt.imgAlt || opt.label" loading="lazy" />
+        </div>
+        <ng-template #textOnly>
+          <div class="img-wrap img-wrap--placeholder">
+            <span class="placeholder-text">{{ opt.label }}</span>
+          </div>
+        </ng-template>
       </button>
     </div>
   </div>
