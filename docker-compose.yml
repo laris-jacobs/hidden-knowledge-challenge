@@ -8,4 +8,9 @@ services:
     ports:
       - "8080:8080"
       - "5678:5678"
-    restart: unless-stopped
+  frontend:
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
