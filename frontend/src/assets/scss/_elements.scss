@@ -7,6 +7,16 @@
   text-align: center;
   //filter: brightness(-2.5);
 }
-.card{
 
+.footer-main{
+background: $footer-background;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 3px;
+  text-align: center;
+}
+.text{
+  color: white;
 }

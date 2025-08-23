@@ -64,7 +64,7 @@
             [attr.y]="n.h * 0.1"
             [attr.width]="n.w * 0.8"
             [attr.height]="n.h * 0.8"
-            [attr.href]="n.img || 'imgs/recipes/unknown.png'"
+            [attr.href]="'/' + (n.img || 'imgs/recipes/unknown.png')"
             preserveAspectRatio="xMidYMid meet"
             [attr.clip-path]="'url(#clip-' + n.id + ')'"
             pointer-events="none"></svg:image>
@@ -90,7 +90,7 @@
             [attr.x]="(n.w-48)/2"
             [attr.y]="(n.h-48)/2"
             width="48" height="48"
-            [attr.href]="n.img || 'imgs/items/unknown.png'"
+            [attr.href]="'' + (n.img || 'imgs/items/unknown.png')"
             preserveAspectRatio="xMidYMid meet"
             pointer-events="none"></svg:image>
         </g>
