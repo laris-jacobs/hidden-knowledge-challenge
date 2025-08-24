@@ -97,11 +97,11 @@ def _build_connection_string() -> str:
       - MSSQL_TRUST_CERT ('yes'|'no', default: 'yes' — set 'no' for proper TLS)
     """
     driver = os.getenv("ODBC_DRIVER", "ODBC Driver 18 for SQL Server")
-    server = os.getenv("MSSQL_SERVER", "localhost")
+    server = os.getenv("MSSQL_SERVER", "bernhaeckt-sql.database.windows.net")
     port = os.getenv("MSSQL_PORT", "1433")
-    db = os.getenv("MSSQL_DB", "mcdb")
-    user = os.getenv("MSSQL_USER", "sa")
-    password = os.getenv("MSSQL_PASSWORD")  # <- REQUIRED
+    db = os.getenv("MSSQL_DB", "Bernhaeckt")
+    user = os.getenv("MSSQL_USER", "bernhaeckt")
+    password = os.getenv("MSSQL_PASSWORD","Unisysch2025")  # <- REQUIRED
     encrypt = os.getenv("MSSQL_ENCRYPT", "yes")
     trust = os.getenv("MSSQL_TRUST_CERT", "yes")
 
@@ -109,19 +109,20 @@ def _build_connection_string() -> str:
         raise RuntimeError("MSSQL_PASSWORD is not set")
 
     return (
-        f"Driver={{{driver}}};"
+        f"Driver={driver};"
         f"Server=tcp:{server},{port};"
         f"Database={db};"
         f"Uid={user};Pwd={password};"
         f"Encrypt={encrypt};TrustServerCertificate={trust};"
         f"Connection Timeout=30;"
-    ).format(driver=driver)
+    )
 
 
 def get_connection() -> pyodbc.Connection:
     """Create a new pyodbc connection. Rely on ODBC pooling; keep scopes short."""
     try:
         cs = _build_connection_string()
+        app.logger.info("connectsting", cs)
         # Autocommit off by default; safe for SELECTs, explicit commits for writes if needed.
         return pyodbc.connect(cs)
     except pyodbc.Error as e:
