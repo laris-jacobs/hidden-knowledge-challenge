@@ -2,17 +2,25 @@ import { Action, Item, Source } from '../models/input.model';
 import { GraphResult, MiniNode, MiniEdge, GraphBuildOptions } from '../models/graph.models';
 
 /**
- * Local node/edge "extensions" that we use internally. We still return the plain
- * MiniNode/MiniEdge (these are compatible because these fields are optional).
+ * Local node/edge "extensions" used internally while building the graph.
+ * We still return plain MiniNode/MiniEdge (the extra fields are optional
+ * and therefore type-compatible with the public types).
  */
 type NodeEx = MiniNode & {
+  /** Internal: true if this action node represents a merged action. */
   __isMerged?: boolean;
+  /** Internal: stable key describing which conflict group this action belongs to. */
   conflictKey?: string;
+  /** Internal: convenience boolean so UIs can simply check a flag. */
+  hasConflict?: boolean;
+  /** Internal: set when the item is a synthetic "unknown" placeholder. */
   isUnknown?: boolean;
+  /** Internal: set when the item is considered a base resource. */
   isBase?: boolean;
 };
 
 type EdgeEx = MiniEdge & {
+  /** If true, this edge participates in a quantity conflict. */
   conflict?: boolean;
 };
 
@@ -34,8 +42,9 @@ const DEF_OPTS: Required<GraphBuildOptions> = {
  * Builds a *static* knowledge graph for a target item:
  * - Merges equivalent actions by I/O signature, prefers highest-trust sources
  * - Expands producers recursively from right (target) to left (inputs)
- * - Inserts "unknown" chain for non-base items with no producers
+ * - Inserts an "unknown" chain for non-base items with no producers
  * - Detects conflicts: same output & same input-ID set but differing input quantities
+ * - Annotates *both* edges (for rendering) and action nodes (for easy UI highlighting)
  * - Computes a simple grid layout by levels
  */
 export function buildKnowledgeGraphStatic(
@@ -66,10 +75,11 @@ export function buildKnowledgeGraphStatic(
     return { trust: bestT, sourceName: best.name ?? best.id ?? 'Unknown' };
   };
 
-  /** Determine if an item is a base resource (no production chain). */
+  /** Determine if an item is a base resource (has no production chain). */
   const isBaseItem = (it?: Item): boolean => {
     if (!it) return false;
-    const v = (it as any).is_base; // model may expose both snake/camel variants
+    // Be tolerant: model may expose both snake/camel variants or use a different flag.
+    const v = (it as any).is_base;
     if (typeof v === 'boolean') return v;
     if (typeof v === 'string') {
       const s = v.toLowerCase();
@@ -266,14 +276,17 @@ export function buildKnowledgeGraphStatic(
       inputs: [],
       outputs: [],
       sources: [],
-      image_url: '',          // intentionally blank
+      image_url: '',          // intentionally blank to visually indicate "unknown"
       station: '',
       action_type_id: 'unknown',
     };
-    ensureActionNode(unkAct, actLevel, 'Unknown source', ''); // force empty image
+    // Force empty image on the unknown action node
+    ensureActionNode(unkAct, actLevel, 'Unknown source', '');
 
+    // Create a synthetic "unknown input" item with no image
     ensureItemNode(unkItemId, actLevel - 1, 'Unknown Item', { img: '', isUnknown: true });
 
+    // Wire: unknown item -> unknown action -> missing item
     addEdge(unkItemId, unkActId, 1);
     addEdge(unkActId, missingItemId, 1);
   };
@@ -315,7 +328,8 @@ export function buildKnowledgeGraphStatic(
         if (!isBaseItem(inItem)) {
           expandForItem(inItem.id, inputLevel);
         } else {
-          ensureItemNode(inItem.id, inputLevel); // ensure level bookkeeping
+          // Ensure we still record the lowest level for layout
+          ensureItemNode(inItem.id, inputLevel);
         }
       }
     }
@@ -332,18 +346,19 @@ export function buildKnowledgeGraphStatic(
    * Conflict rule:
    * For the same output (ItemId#Qty) AND the same set of input item *IDs* (ignoring input quantities),
    * if there exist at least two actions with *different* summed input quantities,
-   * mark ONLY the output edges (action→item) for those actions as conflicted.
+   * mark ONLY the output edges (action→item) for those actions as conflicted,
+   * and also drop a conflict marker on the *action node* for easy UI highlighting.
    * Merged actions are ignored for detection.
    */
   const annotateConflicts = () => {
     const nodeList = Array.from(nodes.values());
-    const nodeById = new Map(nodeList.map(n => [n.id, n]));
+    const nodeById = new Map<string, NodeEx>(nodeList.map(n => [n.id, n as NodeEx]));
 
     const inEdgesByAction  = new Map<string, EdgeEx[]>(); // item→action
     const outEdgesByAction = new Map<string, EdgeEx[]>(); // action→item
     const outGroups        = new Map<string, string[]>(); // "<targetItemId>#<qty>" -> actionIds[]
 
-    // Index edges
+    // Index edges by direction and group by identical outputs
     for (const e of edges) {
       const s = nodeById.get(e.source);
       const t = nodeById.get(e.target);
@@ -367,7 +382,7 @@ export function buildKnowledgeGraphStatic(
       }
     }
 
-    // Signatures over inputs
+    // Signature helpers over inputs
     const buildIdOnlySig = (ins: EdgeEx[]) =>
       Array.from(new Set(ins.map(e => e.source))).sort().join('|');
 
@@ -404,19 +419,31 @@ export function buildKnowledgeGraphStatic(
         byIdOnlySig.set(idOnlySig, list);
       }
 
-      for (const rows of byIdOnlySig.values()) {
+      for (const [idOnlySig, rows] of byIdOnlySig.entries()) {
         if (rows.length < 2) continue;
 
         const uniqueQtySigs = new Set(rows.map(r => r.inQtySig));
         if (uniqueQtySigs.size > 1) {
+          // We have a conflict across actions that share the same set of input IDs
+          // but disagree on input quantities for this specific output.
+          const conflictKey = `conflict:${outKey}|in:${idOnlySig}`;
+
           for (const { aid } of rows) {
-            // mark ONLY the output edges contributing to this outKey
+            // (A) Mark the action node so the UI can easily highlight the whole card/node
+            const actNode = nodeById.get(aid);
+            if (actNode && actNode.kind === 'action') {
+              actNode.conflictKey = conflictKey;
+              actNode.hasConflict = true;
+            }
+
+            // (B) Mark ONLY the output edges contributing to this outKey
             for (const e of (outEdgesByAction.get(aid) ?? [])) {
               const tgt = nodeById.get(e.target);
               if (!tgt) continue;
               const eKey = `${tgt.id}#${normQty(e.qty)}`;
               if (eKey === outKey) e.conflict = true;
             }
+            // Important: we do NOT mark input edges.
           }
         }
       }
