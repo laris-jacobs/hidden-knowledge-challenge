@@ -14,6 +14,8 @@ export class MiniGraphComponent {
 
   private draggingId: string | null = null;
   private dragOffset = {x: 0, y: 0};
+  private divdragging = false;
+  private divdragstart = {x: 0, y: 0};
 
   Math = Math;
 
@@ -58,5 +60,41 @@ export class MiniGraphComponent {
         conflict: !!e.conflict
       };
     });
+  }
+
+  onDivDown(evt: PointerEvent) {
+    if(this.draggingId) {
+      this.divdragging = false;
+      return
+    }
+    this.divdragging = true
+    this.divdragstart.x = evt.clientX;
+    this.divdragstart.y = evt.clientY;
+    console.log(this.divdragstart);
+  }
+
+  onDivMove(evt: PointerEvent) {
+    if(this.draggingId) {
+      this.divdragging = false;
+      return
+    }
+    if (this.divdragging) {
+      const deltax = this.divdragstart.x - evt.clientX;
+      const deltay = this.divdragstart.y - evt.clientY;
+      for (let nx of this.nodes) {
+        nx.x -= deltax;
+        nx.y -= deltay;
+      }
+      this.divdragstart.x = evt.clientX;
+      this.divdragstart.y = evt.clientY;
+    }
+  }
+
+  onDivUp($event: PointerEvent) {
+    this.divdragging = false
+  }
+
+  onDivLeave($event: PointerEvent) {
+    this.divdragging = false
   }
 }

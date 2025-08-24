@@ -1,4 +1,5 @@
-<svg class="graph-canvas"
+<div (pointerdown)="onDivDown($event)" (pointermove)="onDivMove($event)" (pointerup)="onDivUp($event)" (pointerleave)="onDivLeave($event)">
+  <svg class="graph-canvas"
      xmlns="http://www.w3.org/2000/svg"
      xmlns:svg="http://www.w3.org/2000/svg">
 
@@ -99,3 +100,4 @@
     </g>
   </g>
 </svg>
+</div>
