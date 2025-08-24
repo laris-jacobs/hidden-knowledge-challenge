@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   db:
-    build: ./db
+    build: docker
     container_name: mc-mssql
     environment:
       ACCEPT_EULA: "Y"

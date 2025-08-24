@@ -26,7 +26,7 @@ This is a **mono-repo** containing both backend and frontend.
 Start the database by running:
 
 ```bash
-cd docker
+cd database
 docker-compose up -d 
 ```
 
@@ -39,13 +39,13 @@ export SA_PASSWORD='YourStrong@Passw0rd!'
 First, load the schema into the MSSQL database:
 
 ```bash
-cat backend/sql/schema.sql | docker exec -i mc-mssql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$SA_PASSWORD" -C -d mcdb -b
+cat database/sql/schema.sql | docker exec -i mc-mssql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$SA_PASSWORD" -C -d mcdb -b
 ```
 
 Then load the seed data:
 
 ```bash
-find backend/sql -maxdepth 1 -type f -name '*.sql' ! -name 'schema.sql' -print0 | xargs -0 cat | docker exec -i mc-mssql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$SA_PASSWORD" -C -d mcdb -b
+find database/sql -maxdepth 1 -type f -name '*.sql' ! -name 'schema.sql' -print0 | xargs -0 cat | docker exec -i mc-mssql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$SA_PASSWORD" -C -d mcdb -b
 ```
 
 ###  Run the backend:
