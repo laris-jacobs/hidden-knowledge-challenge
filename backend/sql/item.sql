@@ -1,0 +1,12 @@
+INSERT INTO item (id, name, image_url, is_base, base_harvest) VALUES (N'cobblestone', N'Cobblestone', N'imgs/items/cobblestone.png', 1, N'Baue Stone mit einer Spitzhacke ab');
+INSERT INTO item (id, name, image_url, is_base, base_harvest) VALUES (N'crafting_table', N'Crafting Table', N'imgs/items/crafting_table.png', 0, null);
+INSERT INTO item (id, name, image_url, is_base, base_harvest) VALUES (N'diamond', N'Diamond', N'imgs/items/diamond_sword.png', 1, N'Abbau von Diamond Ore (Eisen+ Spitzhacke)');
+INSERT INTO item (id, name, image_url, is_base, base_harvest) VALUES (N'diamond_sword', N'Diamond Sword', N'imgs/items/iron_ingot.png', 0, null);
+INSERT INTO item (id, name, image_url, is_base, base_harvest) VALUES (N'iron_ingot', N'Iron Ingot', N'imgs/items/iron_ingot.png', 0, null);
+INSERT INTO item (id, name, image_url, is_base, base_harvest) VALUES (N'iron_sword', N'Iron Sword', N'imgs/items/iron_sword.png', 0, null);
+INSERT INTO item (id, name, image_url, is_base, base_harvest) VALUES (N'log_jungle', N'Jungle Log', N'imgs/items/log_jungle.png', 1, N'Fälle einen Jungle-Baum');
+INSERT INTO item (id, name, image_url, is_base, base_harvest) VALUES (N'log_oak', N'Oak Log', N'imgs/items/log_oak.png', 1, N'Fälle einen Oak-Baum');
+INSERT INTO item (id, name, image_url, is_base, base_harvest) VALUES (N'pickaxe_stone', N'Stone Pickaxe', N'imgs/items/stone_pickaxe.png', 0, null);
+INSERT INTO item (id, name, image_url, is_base, base_harvest) VALUES (N'plank_jungle', N'Jungle Planks', N'imgs/items/plank_jungle.png', 0, null);
+INSERT INTO item (id, name, image_url, is_base, base_harvest) VALUES (N'plank_oak', N'Oak Planks', N'imgs/items/plank_oak.png', 0, null);
+INSERT INTO item (id, name, image_url, is_base, base_harvest) VALUES (N'stick', N'Stick', N'imgs/items/stick.png', 0, N'Sammle Sticks aus Blättern/Dead Bushes');

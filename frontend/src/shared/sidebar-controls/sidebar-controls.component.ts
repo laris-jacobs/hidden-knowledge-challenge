@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
+import {Component, EventEmitter, Input, Output, signal} from '@angular/core';
 
 export interface ControlOption {
   key: string;
@@ -7,7 +7,10 @@ export interface ControlOption {
   imgAlt?: string;
 }
 
-export interface ControlToggle { key: string; label: string; }
+export interface ControlToggle {
+  key: string;
+  label: string;
+}
 
 @Component({
   selector: 'app-sidebar-controls',

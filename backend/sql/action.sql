@@ -1,0 +1,11 @@
+INSERT INTO action (id, action_type_id, station, image_url) VALUES (N'act_crafting_table_jungle_conflict', N'crafting', N'crafting_table', N'imgs/recipes/act_crafting_table_from_jungle.png');
+INSERT INTO action (id, action_type_id, station, image_url) VALUES (N'act_crafting_table_jungle_official', N'crafting', N'crafting_table', N'imgs/recipes/act_crafting_table_from_jungle.png');
+INSERT INTO action (id, action_type_id, station, image_url) VALUES (N'act_crafting_table_oak_conflict', N'crafting', N'crafting_table', N'imgs/recipes/act_crafting_table_from_oak.png');
+INSERT INTO action (id, action_type_id, station, image_url) VALUES (N'act_crafting_table_oak_official', N'crafting', N'crafting_table', N'imgs/recipes/act_crafting_table_from_oak.png');
+INSERT INTO action (id, action_type_id, station, image_url) VALUES (N'act_iron_sword', N'crafting', N'crafting_table', N'imgs/recipes/act_iron_sword.png');
+INSERT INTO action (id, action_type_id, station, image_url) VALUES (N'act_pickaxe_bad', N'crafting', N'crafting_table', N'imgs/recipes/act_pickaxe_bad.png');
+INSERT INTO action (id, action_type_id, station, image_url) VALUES (N'act_pickaxe_correct', N'crafting', N'crafting_table', N'imgs/recipes/act_pickaxe_correct.png');
+INSERT INTO action (id, action_type_id, station, image_url) VALUES (N'act_planks_jungle', N'crafting', N'crafting_table', N'imgs/recipes/act_planks_jungle.png');
+INSERT INTO action (id, action_type_id, station, image_url) VALUES (N'act_planks_oak', N'crafting', N'crafting_table', N'imgs/recipes/act_planks_oak.png');
+INSERT INTO action (id, action_type_id, station, image_url) VALUES (N'act_sticks_from_jungle', N'crafting', N'crafting_table', N'imgs/recipes/act_sticks_from_jungle.png');
+INSERT INTO action (id, action_type_id, station, image_url) VALUES (N'act_sticks_from_oak', N'crafting', N'crafting_table', N'imgs/recipes/act_sticks_from_oak.png');

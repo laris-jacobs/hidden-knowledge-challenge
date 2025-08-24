@@ -1,22 +1,32 @@
-# docker-compose.yml
 version: "3.9"
 services:
   db:
-    image: postgres:16
-    container_name: mc-pg
+    build: ./db
+    container_name: mc-mssql
     environment:
-      POSTGRES_USER: mc
-      POSTGRES_PASSWORD: minecraft123
-      POSTGRES_DB: mcdb
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
+      MSSQL_SA_PASSWORD: "YourStrong@Passw0rd!"
     ports:
-      - "5432:5432"
+      - "1433:1433"
     volumes:
-      - pg-data:/var/lib/postgresql/data
-  adminer:
-    image: adminer
-    container_name: mc-adminer
-    restart: always
+      - mssql-data:/var/opt/mssql
+
+  # Optional: Web-SQL-Client (SQLPad supports MSSQL)
+  sqlpad:
+    image: sqlpad/sqlpad:latest
+    container_name: mc-sqlpad
+    environment:
+      SQLPAD_ADMIN: "admin@example.com"
+      SQLPAD_ADMIN_PASSWORD: "ChangeMe123!"
+      SQLPAD_DB_PATH: "/var/lib/sqlpad"
     ports:
-      - "8080:8080"
+      - "3000:3000"
+    depends_on:
+      - db
+    volumes:
+      - sqlpad-data:/var/lib/sqlpad
+
 volumes:
-  pg-data:
+  mssql-data:
+  sqlpad-data:

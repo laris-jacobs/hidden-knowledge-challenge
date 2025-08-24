@@ -1,0 +1,14 @@
+INSERT INTO action_input (action_id, item_id, qty) VALUES (N'act_crafting_table_jungle_conflict', N'plank_jungle', 4);
+INSERT INTO action_input (action_id, item_id, qty) VALUES (N'act_crafting_table_jungle_official', N'plank_jungle', 4);
+INSERT INTO action_input (action_id, item_id, qty) VALUES (N'act_crafting_table_oak_conflict', N'plank_oak', 4);
+INSERT INTO action_input (action_id, item_id, qty) VALUES (N'act_crafting_table_oak_official', N'plank_oak', 4);
+INSERT INTO action_input (action_id, item_id, qty) VALUES (N'act_iron_sword', N'iron_ingot', 2);
+INSERT INTO action_input (action_id, item_id, qty) VALUES (N'act_iron_sword', N'stick', 1);
+INSERT INTO action_input (action_id, item_id, qty) VALUES (N'act_pickaxe_bad', N'cobblestone', 2);
+INSERT INTO action_input (action_id, item_id, qty) VALUES (N'act_pickaxe_bad', N'stick', 2);
+INSERT INTO action_input (action_id, item_id, qty) VALUES (N'act_pickaxe_correct', N'cobblestone', 3);
+INSERT INTO action_input (action_id, item_id, qty) VALUES (N'act_pickaxe_correct', N'stick', 2);
+INSERT INTO action_input (action_id, item_id, qty) VALUES (N'act_planks_jungle', N'log_jungle', 1);
+INSERT INTO action_input (action_id, item_id, qty) VALUES (N'act_planks_oak', N'log_oak', 1);
+INSERT INTO action_input (action_id, item_id, qty) VALUES (N'act_sticks_from_jungle', N'plank_jungle', 2);
+INSERT INTO action_input (action_id, item_id, qty) VALUES (N'act_sticks_from_oak', N'plank_oak', 2);

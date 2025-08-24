@@ -1,4 +1,4 @@
-// Graph-Modelle (zentral – von Mapper & UI gemeinsam genutzt)
+// Graph models (central — shared by mapper & UI)
 
 export type MiniKind = 'item' | 'action';
 
@@ -13,12 +13,12 @@ export interface MiniNode {
   w: number;
   h: number;
 
-  // optional – vom Mapper gesetzt
-  trust?: number;        // 0..1 (für Actions)
-  sourceName?: string;   // z. B. "Official Wiki"
-  conflictKey?: string;  // gesetzt, wenn Action in Konfliktgruppe ist
-  isUnknown?: boolean;   // für Unknown-Items
-  isBase?: boolean;      // Base-Items terminieren
+  // optional — set by the mapper
+  trust?: number;        // 0..1 (for actions)
+  sourceName?: string;   // e.g., "Official Wiki"
+  conflictKey?: string;  // set when the action belongs to a conflict group
+  isUnknown?: boolean;   // for unknown items
+  isBase?: boolean;      // base items terminate expansion
 }
 
 export interface MiniEdge {
@@ -26,9 +26,9 @@ export interface MiniEdge {
   target: string;
   qty?: number | string;
 
-  // optional – vom Mapper gesetzt
+  // optional — set by the mapper
   id?: string;
-  conflict?: boolean;    // true => rote Markierung im UI
+  conflict?: boolean;    // true ⇒ red highlight in the UI
 }
 
 export interface GraphBuildOptions {

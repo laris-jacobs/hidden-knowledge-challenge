@@ -8,12 +8,12 @@ import {MiniEdge, MiniNode} from '../../models/graph.models';
   styleUrls: ['./mini-graph.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MiniGraphComponent{
+export class MiniGraphComponent {
   @Input() nodes: MiniNode[] = [];
   @Input() edges: MiniEdge[] = [];
 
   private draggingId: string | null = null;
-  private dragOffset = { x: 0, y: 0 };
+  private dragOffset = {x: 0, y: 0};
 
   Math = Math;
 
@@ -25,6 +25,7 @@ export class MiniGraphComponent{
     this.dragOffset.x = evt.clientX - n.x;
     this.dragOffset.y = evt.clientY - n.y;
   }
+
   onPointerMove(evt: PointerEvent) {
     if (!this.draggingId) return;
     const n = this.nodes.find(nd => nd.id === this.draggingId);
@@ -32,18 +33,20 @@ export class MiniGraphComponent{
     n.x = evt.clientX - this.dragOffset.x;
     n.y = evt.clientY - this.dragOffset.y;
   }
+
   onPointerUp(evt: PointerEvent) {
     if (!this.draggingId) return;
     (evt.currentTarget as SVGGraphicsElement).releasePointerCapture?.(evt.pointerId);
     this.draggingId = null;
   }
+
   get edgePaths() {
     const map = new Map(this.nodes.map(n => [n.id, n]));
     return this.edges.map(e => {
       const s = map.get(e.source);
       const t = map.get(e.target);
       if (!s || !t) {
-        return { id: e.id ?? '', d: '', cx: 0, cy: 0, label: '', conflict: false };
+        return {id: e.id ?? '', d: '', cx: 0, cy: 0, label: '', conflict: false};
       }
       const d = `M ${s.x} ${s.y} L ${t.x} ${t.y}`;
       return {

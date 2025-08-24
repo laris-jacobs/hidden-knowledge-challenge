@@ -11,7 +11,7 @@ This is a **mono-repo** containing both backend and frontend.
 
 - **Frontend**: Angular
 - **Backend**: Python with Flask
-- **Database**: PostgreSQL (local) und T-SQL (prod) - graph-like schema using recursive queries
+- **Database**: MS SQL (with tsql) - graph-like schema using recursive queries
 
 ## Getting Started
 
@@ -27,19 +27,25 @@ Start the database by running:
 
 ```bash
 cd docker
-docker-compose up -d
+docker-compose up -d 
 ```
 
-First, load the schema into the PostgreSQL database:
+Set your SA password for the commands below (must meet MSSQL password policy):
 
 ```bash
-cat backend/sql/schema.sql | docker exec -i mc-db psql -U postgres -d mcdb
+export SA_PASSWORD='YourStrong@Passw0rd!'
+```
+
+First, load the schema into the MSSQL database:
+
+```bash
+cat backend/sql/schema.sql | docker exec -i mc-mssql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$SA_PASSWORD" -C -d mcdb -b
 ```
 
 Then load the seed data:
 
 ```bash
-cat backend/sql/data.sql | docker exec -i mc-db psql -U postgres -d mcdb
+find backend/sql -maxdepth 1 -type f -name '*.sql' ! -name 'schema.sql' -print0 | xargs -0 cat | docker exec -i mc-mssql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$SA_PASSWORD" -C -d mcdb -b
 ```
 
 ###  Run the backend:
@@ -61,3 +67,4 @@ Then open the app at http://localhost:4200
 ## Further Documentation
 
 - [Database schema](docs/SCHEMA.md)
+- [Continuous Integration](docs/CI.md)

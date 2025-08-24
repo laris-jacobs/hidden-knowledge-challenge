@@ -1,0 +1,11 @@
+INSERT INTO action_source (action_id, source_id) VALUES (N'act_crafting_table_jungle_conflict', N'src_conflict');
+INSERT INTO action_source (action_id, source_id) VALUES (N'act_crafting_table_oak_conflict', N'src_conflict');
+INSERT INTO action_source (action_id, source_id) VALUES (N'act_pickaxe_bad', N'src_conflict');
+INSERT INTO action_source (action_id, source_id) VALUES (N'act_crafting_table_jungle_official', N'src_official');
+INSERT INTO action_source (action_id, source_id) VALUES (N'act_crafting_table_oak_official', N'src_official');
+INSERT INTO action_source (action_id, source_id) VALUES (N'act_iron_sword', N'src_official');
+INSERT INTO action_source (action_id, source_id) VALUES (N'act_pickaxe_correct', N'src_official');
+INSERT INTO action_source (action_id, source_id) VALUES (N'act_planks_jungle', N'src_official');
+INSERT INTO action_source (action_id, source_id) VALUES (N'act_planks_oak', N'src_official');
+INSERT INTO action_source (action_id, source_id) VALUES (N'act_sticks_from_jungle', N'src_official');
+INSERT INTO action_source (action_id, source_id) VALUES (N'act_sticks_from_oak', N'src_official');

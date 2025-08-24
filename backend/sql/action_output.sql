@@ -1,0 +1,11 @@
+INSERT INTO action_output (action_id, item_id, qty) VALUES (N'act_crafting_table_jungle_conflict', N'crafting_table', 1);
+INSERT INTO action_output (action_id, item_id, qty) VALUES (N'act_crafting_table_jungle_official', N'crafting_table', 1);
+INSERT INTO action_output (action_id, item_id, qty) VALUES (N'act_crafting_table_oak_conflict', N'crafting_table', 1);
+INSERT INTO action_output (action_id, item_id, qty) VALUES (N'act_crafting_table_oak_official', N'crafting_table', 1);
+INSERT INTO action_output (action_id, item_id, qty) VALUES (N'act_iron_sword', N'iron_sword', 1);
+INSERT INTO action_output (action_id, item_id, qty) VALUES (N'act_pickaxe_bad', N'pickaxe_stone', 1);
+INSERT INTO action_output (action_id, item_id, qty) VALUES (N'act_pickaxe_correct', N'pickaxe_stone', 1);
+INSERT INTO action_output (action_id, item_id, qty) VALUES (N'act_planks_jungle', N'plank_jungle', 4);
+INSERT INTO action_output (action_id, item_id, qty) VALUES (N'act_planks_oak', N'plank_oak', 4);
+INSERT INTO action_output (action_id, item_id, qty) VALUES (N'act_sticks_from_jungle', N'stick', 4);
+INSERT INTO action_output (action_id, item_id, qty) VALUES (N'act_sticks_from_oak', N'stick', 4);

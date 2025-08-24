@@ -12,5 +12,5 @@ export class KnowledgeGraphComponent {
    private api = inject(Api);
    @Input() nodes!: MiniNode [];
    @Input() edges!: MiniEdge [] ;
-  // Spalten-Layout (links -> rechts): x ≈ 120 | 280 | 440 | 600 | 760 | 920
+  // Column layout (left -> right): x ≈ 120 | 280 | 440 | 600 | 760 | 920
 }
