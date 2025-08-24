@@ -122,7 +122,7 @@ def get_connection() -> pyodbc.Connection:
     """Create a new pyodbc connection. Rely on ODBC pooling; keep scopes short."""
     try:
         cs = _build_connection_string()
-        app.logger.info("connectsting", cs)
+        app.logger.debug(f"connectsting [{cs}]")
         # Autocommit off by default; safe for SELECTs, explicit commits for writes if needed.
         return pyodbc.connect(cs)
     except pyodbc.Error as e:
