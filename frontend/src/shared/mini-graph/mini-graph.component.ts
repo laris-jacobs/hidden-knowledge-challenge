@@ -1,5 +1,5 @@
-import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
-import { MiniNode, MiniEdge } from '../../models/graph.models';
+import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
+import {MiniEdge, MiniNode} from '../../models/graph.models';
 
 @Component({
   selector: 'app-mini-graph',
@@ -8,18 +8,15 @@ import { MiniNode, MiniEdge } from '../../models/graph.models';
   styleUrls: ['./mini-graph.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MiniGraphComponent {
+export class MiniGraphComponent{
   @Input() nodes: MiniNode[] = [];
   @Input() edges: MiniEdge[] = [];
-
-  Math = Math;
 
   private draggingId: string | null = null;
   private dragOffset = { x: 0, y: 0 };
 
-  // optional, aber hilfreich gegen Re-Renders
-  trackByNode = (_: number, n: MiniNode) => n.id;
-  trackByEdge = (_: number, e: MiniEdge) => e.id ?? `${e.source}->${e.target}:${e.qty ?? ''}`;
+  Math = Math;
+
 
   onPointerDown(evt: PointerEvent, n: MiniNode) {
     const el = evt.currentTarget as SVGGraphicsElement;
@@ -40,7 +37,6 @@ export class MiniGraphComponent {
     (evt.currentTarget as SVGGraphicsElement).releasePointerCapture?.(evt.pointerId);
     this.draggingId = null;
   }
-
   get edgePaths() {
     const map = new Map(this.nodes.map(n => [n.id, n]));
     return this.edges.map(e => {

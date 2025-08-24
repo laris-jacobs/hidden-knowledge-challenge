@@ -25,7 +25,7 @@ $primary: #2563eb;
 
     img {
       display: block;
-      max-width: 6.1vw;
+      max-width: 5vw;
       max-height: 30vw;
       object-fit: contain;
     }
@@ -55,4 +55,11 @@ $primary: #2563eb;
   max-width: 80%;
   height: auto;
   margin-bottom: 0.5vw;
+}
+.control{
+  &-form__group, &-form__header{
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
 }
