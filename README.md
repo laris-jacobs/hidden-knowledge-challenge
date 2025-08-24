@@ -68,3 +68,9 @@ Then open the app at http://localhost:4200
 
 - [Database schema](docs/SCHEMA.md)
 - [Continuous Integration](docs/CI.md)
+
+## Test on production environment
+
+The production test instance is available at: <http://74.161.161.50/>.
+
+**Note:** This environment is temporary and may be shut down after the hackathon. Do not rely on it for long-term availability; data may be reset or removed without notice.
